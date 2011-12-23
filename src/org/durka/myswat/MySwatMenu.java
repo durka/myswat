@@ -7,7 +7,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.method.PasswordTransformationMethod;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -82,10 +85,10 @@ public class MySwatMenu extends ListActivity {
     	{
     		final MySwatMenu that = this;
     		
-    		ask("Username:", new Callee() {
+    		ask("Username:", false, new Callee() {
 				public void call(String str) {
 					final String username = str;
-					ask("Password:", new Callee() {
+					ask("Password:", true, new Callee() {
 						public void call(String str) {
 							String password = str;
 							myswat = new MySwat(username, password);
@@ -99,26 +102,38 @@ public class MySwatMenu extends ListActivity {
     	}
     }
     
-    private void ask(String title, final Callee ok)
+    private void ask(String title, boolean password, final Callee ok)
     {
-    	AlertDialog.Builder alert = new AlertDialog.Builder(this);
+    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-    	alert.setTitle(title);
+    	builder.setTitle(title);
 
     	// Set an EditText view to get user input 
     	final EditText input = new EditText(this);
-    	alert.setView(input);
-
-    	alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+    	if (password)
+    	{
+    		input.setTransformationMethod(new PasswordTransformationMethod());
+    	}
+    	builder.setView(input);
+    	
+    	builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
     		public void onClick(DialogInterface dialog, int whichButton) {
     			ok.call(input.getText().toString());
     		}
     	});
-
-    	alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface dialog, int whichButton) {
-    			// Canceled.
-    	  	}
+    	
+    	final AlertDialog alert = builder.create();
+    	
+    	input.setOnKeyListener(new OnKeyListener() {
+			public boolean onKey(View v, int keycode, KeyEvent evt) {
+				if (evt.getAction() == KeyEvent.ACTION_DOWN && keycode == KeyEvent.KEYCODE_ENTER)
+				{
+					alert.dismiss();
+					ok.call(input.getText().toString());
+					return true;
+				}
+				return false;
+			}
     	});
 
     	alert.show();
