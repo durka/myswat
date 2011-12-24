@@ -5,24 +5,38 @@ import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.webkit.ConsoleMessage;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import nu.xom.Nodes;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.durka.myswat.MySwat;
 
-public class MySwatMenu extends ListActivity {
+public class MySwatMenu extends Activity {
 	private MySwat myswat;
 	private LinkedHashMap<String, String> menu;
 	
@@ -35,16 +49,16 @@ public class MySwatMenu extends ListActivity {
 	{
 		public LinkedHashMap<String, String> menu;
 		public String title;
-		private Activity parent;
+		private ListView out;
 		
-		public MenuTask(Activity p)
+		public MenuTask(ListView list)
 		{
-			parent = p;
+			out = list;
 		}
 		
-		protected Boolean doInBackground(String... uris)
+		protected Boolean doInBackground(String... pages)
 		{
-			String page = myswat.get_page(uris[0]);
+			String page = pages[0];
 			menu = myswat.parse_menu(page);
 			Nodes stuff = myswat.xpath(page, "//html:title");
 			if (stuff.size() > 0)
@@ -60,8 +74,28 @@ public class MySwatMenu extends ListActivity {
 		{
 			if (success)
 			{
-				parent.setTitle(title);
-				((MySwatMenu) parent).create_adapter(menu);
+				final ArrayAdapter<String> adapter = new ArrayAdapter<String>(out.getContext(), android.R.layout.simple_list_item_1);
+
+				for (String name : menu.keySet())
+				{
+					adapter.add(name);
+				}
+
+				out.setAdapter(adapter);
+				
+				out.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+					public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+					{
+						String name = (String)adapter.getItem(position);
+						String uri = menu.get(name);
+						
+						if (uri.startsWith("/"))
+						{
+							uri = "https://myswat.swarthmore.edu" + uri;
+						}
+						((WebView)findViewById(R.id.web)).loadUrl(uri);
+					}
+				});
 			}
 		}
 	}
@@ -70,36 +104,56 @@ public class MySwatMenu extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        Bundle joy = getIntent().getExtras();
-    	if (joy != null)
-    	{
-    		myswat = (MySwat) joy.getSerializable("myswat");
-    		String name = joy.getString("name");
-    		String uri = joy.getString("uri");
-    		
-    		Toast.makeText(this, "Loading " + name + "...", Toast.LENGTH_LONG).show();
-    		new MenuTask(this).execute(uri);
-    	}
-    	else
-    	{
-    		final MySwatMenu that = this;
-    		
-    		ask("Username:", false, new Callee() {
-				public void call(String str) {
-					final String username = str;
-					ask("Password:", true, new Callee() {
-						public void call(String str) {
-							String password = str;
-							myswat = new MySwat(username, password);
-							
-							Toast.makeText(that, "Logging in...", Toast.LENGTH_LONG).show();
-				    		new MenuTask(that).execute(myswat.MAIN_MENU);
-						}
-					});
+        setContentView(R.layout.main);
+
+		myswat = new MySwat();
+		final Activity activity = this;
+		
+		// populate the webview
+		WebView web = (WebView)findViewById(R.id.web);
+		web.getSettings().setBuiltInZoomControls(true);
+		web.getSettings().setJavaScriptEnabled(true);
+		
+		web.setWebViewClient(new WebViewClient() {
+			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+			     Toast.makeText(activity, "Oh no! " + description, Toast.LENGTH_SHORT).show();
+			   }
+			public void onReceivedSslError (WebView view, SslErrorHandler handler, SslError error) {
+				 handler.proceed();
+			   }
+			
+			public void onPageFinished(WebView view, String address)
+			{
+				try {
+					URI url = new URI(address);
+					if (url.getPath().contains("P_GenMenu"))
+					{
+						view.loadUrl("javascript:console.log('HERPDERP'+document.getElementsByTagName('html')[0].innerHTML);");
+					}
+				} catch (URISyntaxException e) {
+					// no-op
 				}
-    		});
-    	}
+			}
+		});
+		
+		web.setWebChromeClient(new WebChromeClient() {
+			public boolean onConsoleMessage(ConsoleMessage cmsg)
+			{
+				String msg = cmsg.message();
+				
+				if (msg.startsWith("HERPDERP"))
+				{
+					Toast.makeText(activity, "got html", Toast.LENGTH_SHORT).show();
+					new MenuTask((ListView)findViewById(R.id.list)).execute(msg.substring(8));
+					return true;
+				}
+				
+				return false;
+			}
+		});
+		
+		Toast.makeText(this, "Loading MySwat...", Toast.LENGTH_SHORT).show();
+		web.loadUrl("https://myswat.swarthmore.edu");
     }
     
     private void ask(String title, boolean password, final Callee ok)
@@ -145,65 +199,18 @@ public class MySwatMenu extends ListActivity {
     	
     	if (menu != null)
     	{
-    		create_adapter();
+    		//create_adapter();
     	}
     }
-    
-    private void create_adapter(LinkedHashMap<String, String> m)
-    {
-    	menu = m;
-    	create_adapter();
-    }
-    
-    private void create_adapter()
-    {
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-		
-		for (String name : menu.keySet())
-		{
-			adapter.add(name);
-		}
-		
-		setListAdapter(adapter);
-	}
 
 	public void onPause()
     {
     	super.onPause();
-    	myswat.logout();
+    	if (myswat != null)
+    	{
+    		myswat.logout();
+    	}
     }
-	
-	@Override
-	protected void onListItemClick(ListView list, View view, int position, long id)
-	{
-		super.onListItemClick(list, view, position, id);
-		
-		String name = (String)getListAdapter().getItem(position);
-		String uri = menu.get(name);
-		
-		if (uri.contains("P_GenMenu"))
-		{
-			Intent intent = new Intent(this, MySwatMenu.class);
-			Bundle joy = new Bundle();
-			joy.putSerializable("myswat", myswat);
-			joy.putString("name", name);
-			joy.putString("uri", uri);
-			intent.putExtras(joy);
-			
-			startActivity(intent);
-		}
-		else
-		{
-			Intent intent = new Intent(this, MySwatPage.class);
-			Bundle joy = new Bundle();
-			joy.putSerializable("myswat", myswat);
-			joy.putString("name", name);
-			joy.putString("uri", uri);
-			intent.putExtras(joy);
-			
-			startActivity(intent);
-		}
-	}
 }
 
 /* Instructions for operating MySwarthmore

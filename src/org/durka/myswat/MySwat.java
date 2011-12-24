@@ -176,8 +176,15 @@ public class MySwat implements Serializable
 		{
 			client = getNewHttpClient();
 		}
+	}
+	
+	public MySwat()
+	{
+		logged_in = false;
+		username = "";
+		password = "";
 		
-		Log.d("myswat", "MySwat constructor");
+		client = null;
 	}
 	
 	private DefaultHttpClient getNewHttpClient() {
