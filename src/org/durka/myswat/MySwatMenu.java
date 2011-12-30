@@ -212,9 +212,16 @@ public class MySwatMenu extends Activity {
 						}
 						else if (view.getTitle().equals("Student Detail Schedule"))
 						{
-							// TODO
+							// it is the detailed schedule table
+							// let's parse the classes out
+							view.loadUrl("javascript:(function(tables){" +
+									"for (var i = 0; i < tables.length; i += 2)" + // there is a pair of tables for each class
+									"{" +
+										"console.log('HERPDERP' + tables[i].caption.innerHTML.split(\" - \")[0] + 'DERPHERP' + ' ');" +
+									"}" +
+									"})(document.getElementsByClassName('datadisplaytable'))");
 							
-							handled = false;
+							handled = true;
 						}
 					}
 					
