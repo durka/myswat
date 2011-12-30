@@ -2,6 +2,7 @@ package org.durka.myswat;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import android.app.Activity;
@@ -73,7 +74,11 @@ public class MySwatMenu extends Activity {
 				{ // handle relative hrefs like a browser
 					uri = currentURI.getScheme() + "://" + currentURI.getHost() + "/" + uri;
 				}
-				((WebView)findViewById(R.id.web)).loadUrl(uri);
+				
+				WebView web = (WebView)findViewById(R.id.web);
+				HashMap<String, String> headers = new HashMap<String, String>();
+				headers.put("Referer", web.getUrl());
+				web.loadUrl(uri, headers);
 			}
 		});
 		
@@ -89,19 +94,21 @@ public class MySwatMenu extends Activity {
 		
 		// override some of the WebView default behavior
 		web.setWebViewClient(new WebViewClient() {
-			
 			// don't crash on an error
+			@Override
 			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
 			     Toast.makeText(activity, "Oh no! " + description, Toast.LENGTH_SHORT).show();
 			   }
 			
 			// ignore SSL errors, because Android doesn't trust Swarthmore's
 			// FIXME: this is bad! add the real certificate somehow
+			@Override
 			public void onReceivedSslError (WebView view, SslErrorHandler handler, SslError error) {
 				 handler.proceed();
 			   }
 			
 			// when the WebView begins to render a page
+			@Override
 			public void onPageStarted(WebView view, String address, Bitmap favicon)
 			{
 				// clear out the ListView
@@ -114,6 +121,7 @@ public class MySwatMenu extends Activity {
 			}
 			
 			// when the WebView finishes rendering a page
+			@Override
 			public void onPageFinished(WebView view, String address)
 			{
 				// kill loading dialog
@@ -219,6 +227,7 @@ public class MySwatMenu extends Activity {
 		
 		// we need to override some of the web chrome to catch console.log
 		web.setWebChromeClient(new WebChromeClient() {
+			@Override
 			public boolean onConsoleMessage(ConsoleMessage cmsg)
 			{
 				String msg = cmsg.message();
