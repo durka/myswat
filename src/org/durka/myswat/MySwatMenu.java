@@ -35,6 +35,9 @@ public class MySwatMenu extends Activity {
 	private URI currentURI;						// current URI of the WebView
 	private String username, password;			// credentials most recently used to log in
 	private int login_attempts;					// we try to avoid getting locked out
+	private boolean linking_mode;				// what happens on ListView click?
+												//	 true: loadUrl (value is the href)
+												//   false: javascript (value is the JS to inject)
 	
 	private final static int LOGIN_ATTEMPT_LIMIT = 2;
 	
@@ -68,17 +71,9 @@ public class MySwatMenu extends Activity {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id)
 			{
 				String name = (String)adapter.getItem(position);
-				String uri = menu.get(name);
-				
-				if (uri.startsWith("/"))
-				{ // handle relative hrefs like a browser
-					uri = currentURI.getScheme() + "://" + currentURI.getHost() + "/" + uri;
-				}
 				
 				WebView web = (WebView)findViewById(R.id.web);
-				HashMap<String, String> headers = new HashMap<String, String>();
-				headers.put("Referer", web.getUrl());
-				web.loadUrl(uri, headers);
+				web.loadUrl("javascript:" + menu.get(name));
 			}
 		});
 		
@@ -155,7 +150,7 @@ public class MySwatMenu extends Activity {
 											"if (tds[j].childNodes.length > 1)" + // is this a non-blank cell?
 											"{" + // okay, grab the link info!
 												  // we use console.log with a special prefix so that our custom WebChromeClient will catch it
-												"console.log('HERPDERP' + tds[j].childNodes[1].innerHTML + 'DERPHERP' + tds[j].childNodes[1].href);" +
+												"console.log('HERPDERP' + tds[j].childNodes[1].innerHTML + 'DERPHERP' + 'window.location=\"' + tds[j].childNodes[1].href + '\"');" +
 											"}" +
 										"}" +
 									"}" +
@@ -199,6 +194,29 @@ public class MySwatMenu extends Activity {
 							handled = true;
 						}
 					}
+					else if (currentURI.getPath().contains("P_CrseSchdDetl"))
+					{
+						if (view.getTitle().equals("Select Term"))
+						{
+							// it is the Select Term dropdown page
+							// let's get the options out
+							// (by injecting JavaScript of course)
+							view.loadUrl("javascript:(function(form, select){" +
+									"for (var i = 0; i < select.options.length; ++i)" + // these are options of the dropdown holding the menu entries
+									"{" +
+										"console.log('HERPDERP' + select.options[i].text + 'DERPHERP' + 'document.getElementById(\"term_id\").selectedIndex='+i+'; document.forms[1].submit()');" + // submit the form on ListView click
+									"}" +
+									"})(document.forms[1], document.getElementById('term_id'))"); // feed in the form and the options, which are in a <select id="term_id">
+							
+							handled = true;
+						}
+						else if (view.getTitle().equals("Student Detail Schedule"))
+						{
+							// TODO
+							
+							handled = false;
+						}
+					}
 					
 					// if we processed the page, shrink the WebView and embiggen the ListView
 					// otherwise, the other way around
@@ -232,9 +250,9 @@ public class MySwatMenu extends Activity {
 			{
 				String msg = cmsg.message();
 				
-				// if the console.log starts with our secret prefix, then it must be a link to put in the menu
+				// if the console.log starts with our secret prefix, then it must be a command
 				if (msg.startsWith("HERPDERP"))
-				{
+				{ // this prefix denotes a menu entry
 					String[] parts = msg.substring(8).split("DERPHERP");
 					adapter.add(parts[0]);
 					menu.put(parts[0], parts[1]);
