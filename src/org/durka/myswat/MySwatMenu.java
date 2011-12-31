@@ -7,7 +7,9 @@ import java.util.LinkedHashMap;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Bundle;
@@ -33,7 +35,6 @@ public class MySwatMenu extends Activity {
 	private LinkedHashMap<String, String> menu;	// the menu entries <label, href>
 	private ArrayAdapter<String> adapter;		// the ListView adapter
 	private URI currentURI;						// current URI of the WebView
-	private String username, password;			// credentials most recently used to log in
 	private int login_attempts;					// we try to avoid getting locked out
 	private boolean linking_mode;				// what happens on ListView click?
 												//	 true: loadUrl (value is the href)
@@ -56,8 +57,6 @@ public class MySwatMenu extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        username = "";
-        password = "";
         login_attempts = 0;
 
 		final Activity activity = this; // final var for inner classes
@@ -129,7 +128,7 @@ public class MySwatMenu extends Activity {
 				try {
 					currentURI = new URI(address);
 					boolean handled = false;
-					if (currentURI.getPath().contains("P_GenMenu"))
+					if (currentURI.getPath().contains("P_GenMenu") || (view.getTitle() != null && view.getTitle().equals("Registration")))
 					{ // it's a menu! put it in the ListView
 						login_attempts = 0; // it isn't the login page
 						
@@ -158,7 +157,7 @@ public class MySwatMenu extends Activity {
 								"})(document.getElementsByClassName('menuplaintable')[0].childNodes[1].childNodes)"); // feed in the table rows, which are in a <tbody> in the <table class="menuplaintable">
 						handled = true;
 					}
-					else if (currentURI.getPath().contains("P_WWWLogin"))
+					else if (currentURI.getPath().contains("P_WWWLogin") || (view.getTitle() != null && view.getTitle().equals("User Login")))
 					{ // it's the login screen! prompt for credentials
 						
 						// don't get locked out
@@ -170,59 +169,76 @@ public class MySwatMenu extends Activity {
 						}
 						else
 						{
-							if (username.equals(""))
-							{
-								// the ask() function puts up an AlertDialog with an EditView
-								ask("Username:", username, false, new Callee() {
-									public void call(String str) {
-										username = str;
-										ask("Password:", password, true, new Callee() {
-											public void call(String str) {
-												password = str;
-												
-												// inject some JavaScript to fill out and submit the login form
-												((WebView)findViewById(R.id.web)).loadUrl("javascript:" +
-														"document.getElementsByName('sid')[0].value = '" + username + "';" +
-														"document.getElementsByName('PIN')[0].value = '" + password + "';" +
-														"document.forms[0].submit();");
+							final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
+							final SharedPreferences.Editor e = prefs.edit();
+							
+							// the ask() function puts up an AlertDialog with an EditView
+							// TODO: activity for user management
+							ask("Username:", prefs.getString("username", ""), false, new Callee() {
+								public void call(String str) {
+									final String username = str;
+									e.putString("username", username);
+									
+									ask("Password:", prefs.getString("password", ""), true, new Callee() {
+										public void call(String str) {
+											final String password = str;
+											if (!password.equals(prefs.getString("password", "")))
+											{
+												e.putString("password", password);
+												yesno("Remember password?",
+														new Runnable() {
+															public void run()
+															{
+																e.commit();
+															}
+														},
+														new Runnable() {
+															public void run()
+															{
+																// not saving the password
+															}
+														});
 											}
-										});
-									}
-								});
-							}
+											
+											// inject some JavaScript to fill out and submit the login form
+											((WebView)findViewById(R.id.web)).loadUrl("javascript:" +
+													"document.getElementsByName('sid')[0].value = '" + username + "';" +
+													"document.getElementsByName('PIN')[0].value = '" + password + "';" +
+													"document.forms[0].submit();");
+										}
+									});
+								}
+							});
 							
 							handled = true;
 						}
 					}
-					else if (currentURI.getPath().contains("P_CrseSchdDetl"))
+					else if (view.getTitle() != null && view.getTitle().equals("Select Term"))
 					{
-						if (view.getTitle().equals("Select Term"))
-						{
-							// it is the Select Term dropdown page
-							// let's get the options out
-							// (by injecting JavaScript of course)
-							view.loadUrl("javascript:(function(form, select){" +
-									"for (var i = 0; i < select.options.length; ++i)" + // these are options of the dropdown holding the menu entries
-									"{" +
-										"console.log('HERPDERP' + select.options[i].text + 'DERPHERP' + 'document.getElementById(\"term_id\").selectedIndex='+i+'; document.forms[1].submit()');" + // submit the form on ListView click
-									"}" +
-									"})(document.forms[1], document.getElementById('term_id'))"); // feed in the form and the options, which are in a <select id="term_id">
-							
-							handled = true;
-						}
-						else if (view.getTitle().equals("Student Detail Schedule"))
-						{
-							// it is the detailed schedule table
-							// let's parse the classes out
-							view.loadUrl("javascript:(function(tables){" +
-									"for (var i = 0; i < tables.length; i += 2)" + // there is a pair of tables for each class
-									"{" +
-										"console.log('HERPDERP' + tables[i].caption.innerHTML.split(\" - \")[0] + 'DERPHERP' + ' ');" +
-									"}" +
-									"})(document.getElementsByClassName('datadisplaytable'))");
-							
-							handled = true;
-						}
+						// it is the Select Term dropdown page
+						// let's get the options out
+						// (by injecting JavaScript of course)
+						view.loadUrl("javascript:(function(form, select){" +
+								"for (var i = 0; i < select.options.length; ++i)" + // these are options of the dropdown holding the menu entries
+								"{" +
+									"console.log('HERPDERP' + select.options[i].text + 'DERPHERP' + 'document.getElementById(\"term_id\").selectedIndex='+i+'; document.forms[1].submit()');" + // submit the form on ListView click
+								"}" +
+								"})(document.forms[1], document.getElementById('term_id'))"); // feed in the form and the options, which are in a <select id="term_id">
+						
+						handled = true;
+					}
+					else if (view.getTitle() != null && view.getTitle().equals("Student Detail Schedule"))
+					{
+						// it is the detailed schedule table
+						// let's parse the classes out
+						view.loadUrl("javascript:(function(tables){" +
+								"for (var i = 0; i < tables.length; i += 2)" + // there is a pair of tables for each class
+								"{" +
+									"console.log('HERPDERP' + tables[i].caption.innerHTML.split(\" - \")[0] + 'DERPHERP' + ' ');" +
+								"}" +
+								"})(document.getElementsByClassName('datadisplaytable'))");
+						
+						handled = true;
 					}
 					
 					// if we processed the page, shrink the WebView and embiggen the ListView
@@ -267,6 +283,12 @@ public class MySwatMenu extends Activity {
 				}
 				
 				return false;
+			}
+			
+			@Override
+			public void onReceivedTitle(WebView view, String title)
+			{
+				activity.setTitle("MySwat (" + title + ")");
 			}
 		});
 		
@@ -339,6 +361,27 @@ public class MySwatMenu extends Activity {
 
     	alert.show(); // this does not block!
 	}
+    
+    private void yesno(String question, final Runnable yes, final Runnable no)
+    {
+    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    	
+    	builder.setMessage(question);
+    	
+    	builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int whichButton) {
+    			yes.run();
+    		}
+    	});
+    	
+    	builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int whichButton) {
+    			no.run();
+    		}
+    	});
+    	
+    	builder.show();
+    }
 }
 
 /* Instructions for operating MySwarthmore
