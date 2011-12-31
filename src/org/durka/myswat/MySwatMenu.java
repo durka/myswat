@@ -153,7 +153,11 @@ public class MySwatMenu extends Activity {
 											"if (tds[j].childNodes.length > 1)" + // is this a non-blank cell?
 											"{" + // okay, grab the link info!
 												  // we use console.log with a special prefix so that our custom WebChromeClient will catch it
-												"console.log('HERPDERP' + tds[j].childNodes[1].innerText + 'DERPHERP' + 'window.location=\"' + tds[j].childNodes[1].href + '\"');" +
+												"console.log('HERPDERP' + " +
+													"tds[j].childNodes[1].innerText + " +
+															"'DERPHERP' + " +
+													"'window.location=\"' + tds[j].childNodes[1].href + '\"'" +
+												");" +
 											"}" +
 										"}" +
 									"}" +
@@ -226,7 +230,12 @@ public class MySwatMenu extends Activity {
 								"var form = document.forms[form_num], select = document.getElementById(select_id);" +
 								"for (var i = 0; i < select.options.length; ++i)" + // these are options of the dropdown holding the menu entries
 								"{" +
-									"console.log('HERPDERP' + select.options[i].text + 'DERPHERP' + 'document.getElementById(' + select_id + ').selectedIndex='+i+'; document.forms[' + form_num + '].submit()');" + // submit the form on ListView click
+									"console.log('HERPDERP' + " +
+										"select.options[i].text + " +
+												"'DERPHERP' + " +
+										"'document.getElementById(\"' + select_id + '\").selectedIndex='+i+';" +
+										" document.forms[' + form_num + '].submit()'" + // submit the form on ListView click
+									");" +
 								"}" +
 								"})(1, 'term_id')"); // feed in the form and the options, which are in a <select id="term_id">
 						
@@ -281,7 +290,15 @@ public class MySwatMenu extends Activity {
 								"}" +
 								"for (var i = 0; i < classes.length; ++i)" +
 								"{" +
-									"console.log('HERPDERP' + classes[i].name + 'DERPHERP' + 'alert(\"' + [classes[i].section, classes[i].prof, classes[i].time, classes[i].place.replace(/Science Center/g, 'Sci'), classes[i].credit].join('\\\\n') + '\")');" +
+									"console.log('HERPDERP' + " +
+										"classes[i].name + " +
+												"'DERPHERP' + " +
+										"'alert(\"' + [classes[i].section, classes[i].prof," +
+													 " classes[i].time," +
+													 " classes[i].place.replace(/Science Center/g, 'Sci')," +
+													 " classes[i].credit].join('\\\\n')" +
+											"+ '\")'" +
+									");" +
 								"}" +
 								"})(document.getElementsByClassName('datadisplaytable'))");
 						
@@ -326,7 +343,11 @@ public class MySwatMenu extends Activity {
 									"{" +
 										"s[s.length] = [semesters[i].grades[j].grade + ' in ' + semesters[i].grades[j].name, semesters[i].grades[j].detail, semesters[i].grades[j].prof, semesters[i].grades[j].credits + ' credit(s)'].filter(function (a) { return a != '-'; }).join('\\\\n\\\\t\\\\t');" +
 									"}" +
-									"console.log('HERPDERP' + semesters[i].term + ' (' + semesters[i].credits + ' credits)' + 'DERPHERP' + 'alert(\"' + s.join('\\\\n') + '\")');" +
+									"console.log('HERPDERP' + " +
+										"semesters[i].term + ' (' + semesters[i].credits + ' credits)' + " +
+												"'DERPHERP' + " +
+										"'alert(\"' + s.join('\\\\n') + '\")'" +
+									");" +
 								"}" +
 								"})(document.getElementsByClassName('default2')[0].rows)");
 						
