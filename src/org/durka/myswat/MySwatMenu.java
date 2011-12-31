@@ -14,11 +14,13 @@ import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.webkit.ConsoleMessage;
+import android.webkit.JsResult;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
@@ -29,6 +31,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MySwatMenu extends Activity {
@@ -72,6 +75,7 @@ public class MySwatMenu extends Activity {
 				String name = (String)adapter.getItem(position);
 				
 				WebView web = (WebView)findViewById(R.id.web);
+				Log.d("MySwat", menu.get(name));
 				web.loadUrl("javascript:" + menu.get(name));
 			}
 		});
@@ -149,7 +153,7 @@ public class MySwatMenu extends Activity {
 											"if (tds[j].childNodes.length > 1)" + // is this a non-blank cell?
 											"{" + // okay, grab the link info!
 												  // we use console.log with a special prefix so that our custom WebChromeClient will catch it
-												"console.log('HERPDERP' + tds[j].childNodes[1].innerHTML + 'DERPHERP' + 'window.location=\"' + tds[j].childNodes[1].href + '\"');" +
+												"console.log('HERPDERP' + tds[j].childNodes[1].innerText + 'DERPHERP' + 'window.location=\"' + tds[j].childNodes[1].href + '\"');" +
 											"}" +
 										"}" +
 									"}" +
@@ -204,7 +208,7 @@ public class MySwatMenu extends Activity {
 											((WebView)findViewById(R.id.web)).loadUrl("javascript:" +
 													"document.getElementsByName('sid')[0].value = '" + username + "';" +
 													"document.getElementsByName('PIN')[0].value = '" + password + "';" +
-													"document.forms[0].submit();");
+													"document.loginform.submit();");
 										}
 									});
 								}
@@ -218,12 +222,13 @@ public class MySwatMenu extends Activity {
 						// it is the Select Term dropdown page
 						// let's get the options out
 						// (by injecting JavaScript of course)
-						view.loadUrl("javascript:(function(form, select){" +
+						view.loadUrl("javascript:(function(form_num, select_id){" +
+								"var form = document.forms[form_num], select = document.getElementById(select_id);" +
 								"for (var i = 0; i < select.options.length; ++i)" + // these are options of the dropdown holding the menu entries
 								"{" +
-									"console.log('HERPDERP' + select.options[i].text + 'DERPHERP' + 'document.getElementById(\"term_id\").selectedIndex='+i+'; document.forms[1].submit()');" + // submit the form on ListView click
+									"console.log('HERPDERP' + select.options[i].text + 'DERPHERP' + 'document.getElementById(' + select_id + ').selectedIndex='+i+'; document.forms[' + form_num + '].submit()');" + // submit the form on ListView click
 								"}" +
-								"})(document.forms[1], document.getElementById('term_id'))"); // feed in the form and the options, which are in a <select id="term_id">
+								"})(1, 'term_id')"); // feed in the form and the options, which are in a <select id="term_id">
 						
 						handled = true;
 					}
@@ -232,11 +237,98 @@ public class MySwatMenu extends Activity {
 						// it is the detailed schedule table
 						// let's parse the classes out
 						view.loadUrl("javascript:(function(tables){" +
-								"for (var i = 0; i < tables.length; i += 2)" + // there is a pair of tables for each class
+								"var classes = [];" +
+								"for (var i = 0; i < tables.length; ++i)" + // there is a pair of tables for each class
 								"{" +
-									"console.log('HERPDERP' + tables[i].caption.innerHTML.split(\" - \")[0] + 'DERPHERP' + ' ');" +
+									"var klass = tables[i].caption.innerText.split(/ ?- ?/);" +
+									"var name = klass[0];" +
+									"if (i+1 <= tables.length && tables[i+1].summary.substr(0, 10) == 'This table')" +
+									"{" +
+										"if (tables[i+1].rows[1].cells[5].innerText == 'Lab')" +
+										"{" +
+											"classes[classes.length-1].time += ', lab ' + tables[i+1].rows[1].cells[2].innerText + ' ' + tables[i+1].rows[1].cells[1].innerText.split(\" - \")[0];" +
+											"classes[classes.length-1].place += ', lab ' + tables[i+1].rows[1].cells[3].innerText;" +
+										"}" +
+										"else if (tables[i+1].rows[1].cells[5].innerText == 'Problem session')" +
+										"{" +
+											"classes[classes.length-1].time += ', prob sess ' + tables[i+1].rows[1].cells[2].innerText + ' ' + tables[i+1].rows[1].cells[1].innerText.split(\" - \")[0];" +
+											"classes[classes.length-1].place += ', prob sess ' + tables[i+1].rows[1].cells[3].innerText;" +
+										"}" +
+										"else" +
+										"{" +
+											"classes[classes.length] = {" +
+												"'name': name," +
+												"'section': klass[1] + ' (' + klass[2] + ')'," +
+												"'prof': tables[i+1].rows[1].cells[6].innerText," +
+												"'time': tables[i+1].rows[1].cells[2].innerText + ' ' + tables[i+1].rows[1].cells[1].innerText.split(\" - \")[0]," +
+												"'place': tables[i+1].rows[1].cells[3].innerText," +
+												"'credit': Math.round(tables[i].rows[5].cells[1].innerText*10)/10 + ' credit(s), ' + tables[i].rows[4].cells[1].innerText," +
+											"};" +
+										"}" +
+										"++i;" +
+									"}" +
+									"else" +
+									"{" +
+										"classes[classes.length] = {" +
+											"'name': name," +
+											"'section': klass[1] + ' (' + klass[2] + ')'," +
+											"'prof': ''," +
+											"'time': ''," +
+											"'place': ''," +
+											"'credit': Math.round(tables[i].rows[5].cells[1].innerText*10)/10 + ' credit(s), ' + tables[i].rows[4].cells[1].innerText" +
+										"};" +
+									"}" +
+								"}" +
+								"for (var i = 0; i < classes.length; ++i)" +
+								"{" +
+									"console.log('HERPDERP' + classes[i].name + 'DERPHERP' + 'alert(\"' + [classes[i].section, classes[i].prof, classes[i].time, classes[i].place.replace(/Science Center/g, 'Sci'), classes[i].credit].join('\\\\n') + '\")');" +
 								"}" +
 								"})(document.getElementsByClassName('datadisplaytable'))");
+						
+						handled = true;
+					}
+					else if (view.getTitle() != null && view.getTitle().equals("Unoffical Grade Report")) // [sic]
+					{
+						// Grades at a Glance!
+						
+						view.loadUrl("javascript:(function(rows){" +
+								"var semesters = [];" +
+								"var cursem = null;" +
+								"for (var i = 0; i < rows.length; ++i)" + // a row may be a semester colspan, a header row or a data row
+								"{" +
+									"if (rows[i].cells.length == 1)" +
+									"{" + // it's a semester colspan
+										"if (cursem != null) semesters[semesters.length] = cursem;" +
+										"var text = rows[i].cells[0].innerText.split(/\\s+/);" +
+										"cursem = {" +
+											"'term': text[1] + ' ' + text[2]," +
+											"'credits': parseInt(text[text.length-1])," +
+											"'grades': []," +
+										"};" +
+									"}" +
+									"else if (rows[i].onmouseover != null)" +
+									"{" + // data rows have mouseover events
+										"function T(j) { return rows[i].cells[j].innerText; }" +
+										"cursem.grades[cursem.grades.length] = {" +
+											"'name': T(1)," +
+											"'detail': T(0)," +
+											"'prof': T(5)," +
+											"'credits': T(2)," +
+											"'grade': T(3)," +
+										"};" +
+									"}" +
+								"}" +
+								"if (cursem != null) semesters[semesters.length] = cursem;" +
+								"for (var i = 0; i < semesters.length; ++i)" +
+								"{" +
+									"var s = [];" +
+									"for (var j = 0; j < semesters[i].grades.length; ++j)" +
+									"{" +
+										"s[s.length] = [semesters[i].grades[j].grade + ' in ' + semesters[i].grades[j].name, semesters[i].grades[j].detail, semesters[i].grades[j].prof, semesters[i].grades[j].credits + ' credit(s)'].filter(function (a) { return a != '-'; }).join('\\\\n\\\\t\\\\t');" +
+									"}" +
+									"console.log('HERPDERP' + semesters[i].term + ' (' + semesters[i].credits + ' credits)' + 'DERPHERP' + 'alert(\"' + s.join('\\\\n') + '\")');" +
+								"}" +
+								"})(document.getElementsByClassName('default2')[0].rows)");
 						
 						handled = true;
 					}
@@ -283,6 +375,30 @@ public class MySwatMenu extends Activity {
 				}
 				
 				return false;
+			}
+			
+			@Override
+			public boolean onJsAlert(WebView view, String url, String msg, JsResult result)
+			{
+				AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+				
+				TextView alert = new TextView(getApplicationContext());
+				alert.setText(msg);
+				alert.setTextSize(12);
+				alert.setMovementMethod(new ScrollingMovementMethod());
+				
+				builder.setTitle(view.getTitle());
+				builder.setView(alert);
+				builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int button) {
+						// nothing
+					}
+				});
+				
+				builder.show();
+				
+				result.confirm();
+				return true; // we handled it
 			}
 			
 			@Override
