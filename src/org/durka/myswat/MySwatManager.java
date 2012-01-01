@@ -16,6 +16,7 @@ public class MySwatManager extends Activity {
 	private Class<?>[] intents = {
 			MySwatMenu.class,
 			null,
+			Directory.class,
 	};
 	
     public class ImageAdapter extends BaseAdapter {
@@ -23,6 +24,7 @@ public class MySwatManager extends Activity {
     	private Integer[] thumbs = {
     			R.drawable.menu,
     			R.drawable.map,
+    			R.drawable.addressbook,
     	};
 
 		public ImageAdapter(Context c) {

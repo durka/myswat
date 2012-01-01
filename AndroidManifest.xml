@@ -18,6 +18,7 @@
         <activity android:name="MySwatMenu"
                   android:label="@string/app_name">
         </activity>
+        <activity android:name="Directory" android:label="@string/app_name"></activity>
 
     </application>
     <uses-sdk android:minSdkVersion="7" />
