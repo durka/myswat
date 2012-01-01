@@ -13,7 +13,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 public class MySwatManager extends Activity {
-	private Class[] intents = {
+	private Class<?>[] intents = {
 			MySwatMenu.class,
 			null,
 	};
@@ -68,7 +68,7 @@ public class MySwatManager extends Activity {
         GridView grid = (GridView)findViewById(R.id.grid);
         grid.setAdapter(new ImageAdapter(this));
         
-        final Class[] f_intents = intents;
+        final Class<?>[] f_intents = intents;
         final Activity activity = this;
         grid.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
