@@ -36,7 +36,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MySwatMenu extends Activity {
+public class MySwatMenu extends MySwatActivity {
 	private LinkedHashMap<String, String> menu;	// the menu entries <label, href>
 	private ArrayAdapter<String> adapter;		// the ListView adapter
 	private URI currentURI;						// current URI of the WebView
@@ -53,26 +53,6 @@ public class MySwatMenu extends Activity {
 	private abstract class Callee
 	{
 		public abstract void call(String str);
-	}
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		getMenuInflater().inflate(R.menu.common_menu, menu);
-		return true;
-	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		switch (item.getItemId()) {
-		
-		case R.id.escape:
-			this.finish();
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
 	}
 	
     /** Called when the activity is first created. */
