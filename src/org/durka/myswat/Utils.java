@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.apache.http.MethodNotSupportedException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -14,6 +13,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
@@ -105,10 +105,11 @@ public class Utils {
     	builder.show();
     }
 
-    private static String do_http(String uri) { return do_http(uri, "GET", null); }
-    private static String do_http(String uri, String method) { return do_http(uri, method, null); }
-    private static String do_http(String uri, String method, String referer)
+    public static String do_http(String uri) { return do_http(uri, "GET", null); }
+    public static String do_http(String uri, String method) { return do_http(uri, method, null); }
+    public static String do_http(String uri, String method, String referer)
 	{
+    	Log.d("MySwat", method + " " + uri);
 		try
 		{
 			HttpUriRequest request = null;
@@ -144,6 +145,7 @@ public class Utils {
 		}
 		catch (IOException e)
 		{
+			e.printStackTrace();
 			return "E: " + e.getMessage();
 		}
 	}

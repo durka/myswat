@@ -1,6 +1,9 @@
 package org.durka.myswat;
 
+import com.unboundid.ldap.sdk.LDAPConnection;
+
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -14,6 +17,42 @@ public class Directory extends MySwatActivity {
 	private EditText input;
 	private ListView output;
 	private ArrayAdapter<String> output_adapter;
+	
+	private static final String CYGNET = "http://cygnet.sccs.swarthmore.edu/";
+	private static final String CYGNET_PHOTOS = "photos/";
+	private static final String CYGNET_QUERY = "backend.py?terms=";
+	
+	private class QueryTask extends AsyncTask<String, Void, String[]> {
+
+		@Override
+		protected String[] doInBackground(String... queries) {
+			if (queries.length == 1)
+			{
+				String query = queries[0];
+			
+				// can't do either of these except on campus
+				
+				//String cygnet = Utils.do_http(CYGNET + CYGNET_QUERY + query);
+				
+				//LDAPConnection ldap = new LDAPConnection("directory.swarthmore.edu", 389);
+				
+				return null;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		
+		@Override
+		protected void onPostExecute(String[] results)
+		{
+			for (int i = 0; i < results.length; ++i)
+			{
+				Toast.makeText(getApplicationContext(), results[i], Toast.LENGTH_SHORT).show();
+			}
+		}
+	}
 
 	/** Called when the activity is first created. */
     @Override
@@ -37,7 +76,7 @@ public class Directory extends MySwatActivity {
 				
 				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (key == KeyEvent.KEYCODE_ENTER))
 				{
-			          Toast.makeText(Directory.this, terms, Toast.LENGTH_SHORT).show();
+			          new QueryTask().execute(terms);
 			          return true;
 			    }
 				
