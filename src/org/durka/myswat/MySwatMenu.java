@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnKeyListener;
@@ -84,8 +85,11 @@ public class MySwatMenu extends Activity {
 		web.getSettings().setJavaScriptEnabled(true);
 		
 		// a cute little Loading dialog to throw up while the WebView is thinking
+		final TextView percent = new TextView(this);
+		percent.setGravity(Gravity.CENTER);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Loading...");
+		builder.setView(percent);
 		final AlertDialog loading = builder.create();
 		
 		// override some of the WebView default behavior
@@ -368,13 +372,13 @@ public class MySwatMenu extends Activity {
 											  lparam = (LayoutParams)list.getLayoutParams();
 					if (handled)
 					{
-						wparam.weight = 0.2f;
-						lparam.weight = 0.8f;
+						wparam.weight = 0.0f;
+						lparam.weight = 1.0f;
 					}
 					else
 					{
-						wparam.weight = 0.8f;
-						lparam.weight = 0.2f;
+						wparam.weight = 1.0f;
+						lparam.weight = 0.0f;
 					}
 					web.setLayoutParams(wparam);
 					list.setLayoutParams(lparam);
@@ -432,6 +436,12 @@ public class MySwatMenu extends Activity {
 			public void onReceivedTitle(WebView view, String title)
 			{
 				activity.setTitle("MySwat (" + title + ")");
+			}
+			
+			@Override
+			public void onProgressChanged(WebView view, int progress)
+			{
+				percent.setText(Integer.toString(progress) + "%");
 			}
 		});
 		
