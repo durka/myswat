@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/escape" android:checked="false" android:visible="true" android:title="Escape" android:checkable="false" android:titleCondensed="Esc" android:enabled="true" android:alphabeticShortcut="E" android:numericShortcut="0"></item>
+    
+
+</menu>

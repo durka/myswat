@@ -17,6 +17,8 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
 import android.webkit.ConsoleMessage;
@@ -40,6 +42,7 @@ public class MySwatMenu extends Activity {
 	private URI currentURI;						// current URI of the WebView
 	private int login_attempts;					// we try to avoid getting locked out
 	private boolean login_page;
+	private AlertDialog loading;
 	
 	private final static int LOGIN_ATTEMPT_LIMIT = 2;
 	
@@ -50,6 +53,26 @@ public class MySwatMenu extends Activity {
 	private abstract class Callee
 	{
 		public abstract void call(String str);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		getMenuInflater().inflate(R.menu.common_menu, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId()) {
+		
+		case R.id.escape:
+			this.finish();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 	
     /** Called when the activity is first created. */
@@ -90,7 +113,7 @@ public class MySwatMenu extends Activity {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Loading...");
 		builder.setView(percent);
-		final AlertDialog loading = builder.create();
+		loading = builder.create();
 		
 		// override some of the WebView default behavior
 		web.setWebViewClient(new WebViewClient() {
@@ -459,6 +482,7 @@ public class MySwatMenu extends Activity {
     				   ((WebView) findViewById(R.id.web)).getUrl())
     		.commit();
     	
+    	loading.dismiss();
     	super.onPause();
     }
     
