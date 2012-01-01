@@ -1,5 +1,15 @@
 package org.durka.myswat;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import org.apache.http.MethodNotSupportedException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -94,4 +104,47 @@ public class Utils {
     	
     	builder.show();
     }
+
+    private static String do_http(String uri) { return do_http(uri, "GET", null); }
+    private static String do_http(String uri, String method) { return do_http(uri, method, null); }
+    private static String do_http(String uri, String method, String referer)
+	{
+		try
+		{
+			HttpUriRequest request = null;
+			if (method == "GET")
+			{
+				request = new HttpGet(uri);
+			}
+			else if (method == "POST")
+			{
+				request = new HttpPost(uri);
+			}
+
+			if (referer != null)
+			{
+				request.addHeader("Referer", referer);
+			}
+
+			BufferedReader in = new BufferedReader(
+									new InputStreamReader(
+											new DefaultHttpClient()
+												.execute(request)
+													.getEntity()
+														.getContent()));
+			StringBuffer sb = new StringBuffer("");
+			String line = "", NL = System.getProperty("line.separator");
+            while ((line = in.readLine()) != null)
+            {
+                sb.append(line + NL);
+            }
+            in.close();
+            
+            return sb.toString();
+		}
+		catch (IOException e)
+		{
+			return "E: " + e.getMessage();
+		}
+	}
 }
