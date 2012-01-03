@@ -13,40 +13,36 @@ import com.google.android.maps.MapView;
 
 public class Map extends MapActivity {
 	
-	/* BEGIN delegate to MySwatActivity */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		getMenuInflater().inflate(R.menu.common_menu, menu);
-		menu.add("Recenter");
-		menu.add("Google Maps");
+		getMenuInflater().inflate(R.menu.map, menu);
 		return true;
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		if (item.getTitle().equals("Escape"))
+		switch (item.getItemId())
 		{
-			this.finish();
-			return true;
+			case R.id.escape:
+				this.finish();
+				return true;
+			case R.id.map_main:
+				recenter();
+				return true;
+			case R.id.satellite:
+				map.setSatellite(!map.isSatellite());
+				item.setTitle(item.getTitle().equals("Satellite") ? "Streets" : "Satellite");
+				return true;
+			case R.id.googlemaps:
+				GeoPoint center = map.getMapCenter();
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + (center.getLatitudeE6()/1e6) + "," + (center.getLongitudeE6()/1e6) + "?z=17")));
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
-		else if (item.getTitle().equals("Recenter"))
-		{
-			recenter();
-			return true;
-		}
-		else if (item.getTitle().equals("Google Maps"))
-		{
-			GeoPoint center = map.getMapCenter();
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + (center.getLatitudeE6()/1e6) + "," + (center.getLongitudeE6()/1e6) + "?z=17")));
-			return true;
-		}
-		
-		
-		return super.onOptionsItemSelected(item);
 	}
-	/* END delegate to MySwatActivity */
 	
 	private MapView map;
 	

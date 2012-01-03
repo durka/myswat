@@ -38,31 +38,28 @@ public class MySwatMenu extends Activity {
 	public static final String ROOT = "https://myswat.swarthmore.edu";
 	public static final String MAIN = "/pls/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu&msg=WELCOME+";
 	
-	/* BEGIN delegate to MySwatActivity */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		getMenuInflater().inflate(R.menu.common_menu, menu);
-		menu.add("Main menu");
+		getMenuInflater().inflate(R.menu.myswat, menu);
 		return true;
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		if (item.getTitle().equals("Escape"))
+		switch (item.getItemId())
 		{
-			this.finish();
-			return true;
+			case R.id.myswat_main:
+				((WebView) findViewById(R.id.web)).loadUrl(ROOT + MAIN);
+				return true;
+			case R.id.escape:
+				this.finish();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
-		else if (item.getTitle().equals("Main menu"))
-		{
-			((WebView) findViewById(R.id.web)).loadUrl(ROOT + MAIN);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
 	}
-	/* END delegate to MySwatActivity */
 	
 	private LinkedHashMap<String, String> menu;	// the menu entries <label, href>
 	private ArrayAdapter<String> adapter;		// the ListView adapter

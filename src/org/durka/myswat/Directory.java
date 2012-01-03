@@ -17,27 +17,25 @@ import android.widget.Toast;
 
 public class Directory extends Activity {
 	
-	/* BEGIN delegate to MySwatActivity */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		getMenuInflater().inflate(R.menu.common_menu, menu);
+		getMenuInflater().inflate(R.menu.directory, menu);
 		return true;
 	}
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId()) {
-		
-		case R.id.escape:
-			this.finish();
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
+		switch (item.getItemId())
+		{
+			case R.id.escape:
+				this.finish();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
 	}
-	/* END delegate to MySwatActivity */
 	
 	private String terms;
 	private EditText input;
