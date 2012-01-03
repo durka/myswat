@@ -15,7 +15,7 @@ import android.widget.ImageView;
 public class MySwatManager extends Activity {
 	private Class<?>[] intents = {
 			MySwatMenu.class,
-			null,
+			Map.class,
 			Directory.class,
 	};
 	
