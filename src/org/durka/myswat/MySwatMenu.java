@@ -16,6 +16,8 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsResult;
@@ -31,7 +33,37 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MySwatMenu extends MySwatActivity {
+public class MySwatMenu extends Activity {
+	
+	public static final String ROOT = "https://myswat.swarthmore.edu";
+	public static final String MAIN = "/pls/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu&msg=WELCOME+";
+	
+	/* BEGIN delegate to MySwatActivity */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		getMenuInflater().inflate(R.menu.common_menu, menu);
+		menu.add("Main menu");
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		if (item.getTitle().equals("Escape"))
+		{
+			this.finish();
+			return true;
+		}
+		else if (item.getTitle().equals("Main menu"))
+		{
+			((WebView) findViewById(R.id.web)).loadUrl(ROOT + MAIN);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	/* END delegate to MySwatActivity */
+	
 	private LinkedHashMap<String, String> menu;	// the menu entries <label, href>
 	private ArrayAdapter<String> adapter;		// the ListView adapter
 	private URI currentURI;						// current URI of the WebView
@@ -435,7 +467,7 @@ public class MySwatMenu extends MySwatActivity {
 		});
 		
 		// starting page
-		web.loadUrl(getPreferences(Context.MODE_PRIVATE).getString("page", "https://myswat.swarthmore.edu"));
+		web.loadUrl(getPreferences(Context.MODE_PRIVATE).getString("page", ROOT));
     }
     
     @Override

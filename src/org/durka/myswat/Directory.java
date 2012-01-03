@@ -2,17 +2,43 @@ package org.durka.myswat;
 
 import com.unboundid.ldap.sdk.LDAPConnection;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class Directory extends MySwatActivity {
+public class Directory extends Activity {
+	
+	/* BEGIN delegate to MySwatActivity */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		getMenuInflater().inflate(R.menu.common_menu, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId()) {
+		
+		case R.id.escape:
+			this.finish();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+	/* END delegate to MySwatActivity */
+	
 	private String terms;
 	private EditText input;
 	private ListView output;
