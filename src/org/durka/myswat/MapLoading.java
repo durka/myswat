@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 
 public class MapLoading extends Activity {
 	
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	Log.d("MapLoading", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.maploading);
         
@@ -21,4 +23,10 @@ public class MapLoading extends Activity {
         });
     }
 
+    @Override
+    public void onPause()
+    {
+    	Log.d("MapLoading", "onPause");
+    	super.onPause();
+    }
 }
