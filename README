@@ -1,0 +1,21 @@
+Trashmower (temporary name) is an Android application meant to be a
+mobile companion for Android smartphones.
+
+At this time the app is in the very early stages.
+
+Features:
+	- wrapper for MySwarthmore online interface (sort of completed)
+	- directory combining Cygnet and the one on the Dash (TODO)
+	- Marauder's Map of the campus using Google Maps (in progress)
+	- selected features from the Dash, such as: (all TODO)
+		- available food (on campus, plus directions to nearby establishments)
+		- events on campus
+		- train schedules
+		- weather forecast
+	- interface to selected SCCS services, such as: (all TODO)
+		- GUTS (create SCCS account, create mailing list, etc)
+		- Concierge (reserve SCCS space/equipment)
+	- maybe more, but that's enough dreaming for one README file
+
+Trashmower is licensed under the GPLv3 (see COPYING for details).
+Contact: aburka1...android@sccs.swarthmore.edu
