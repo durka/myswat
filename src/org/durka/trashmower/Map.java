@@ -16,9 +16,10 @@
  * along with Trashmower.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.durka.myswat;
+package org.durka.trashmower;
 
 import java.util.ArrayList;
+import org.durka.trashmower.R;
 
 import android.content.Context;
 import android.content.Intent;

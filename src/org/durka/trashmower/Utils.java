@@ -16,7 +16,7 @@
  * along with Trashmower.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.durka.myswat;
+package org.durka.trashmower;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,6 +26,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.durka.trashmower.R;
 
 import android.app.AlertDialog;
 import android.content.Context;

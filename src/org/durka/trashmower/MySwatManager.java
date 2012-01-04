@@ -16,7 +16,7 @@
  * along with Trashmower.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.durka.myswat;
+package org.durka.trashmower;
 
 import android.app.Activity;
 import android.content.Context;
@@ -29,6 +29,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import org.durka.trashmower.R;
 
 public class MySwatManager extends Activity {
 	private Class<?>[] intents = {

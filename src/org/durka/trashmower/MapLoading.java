@@ -16,13 +16,14 @@
  * along with Trashmower.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.durka.myswat;
+package org.durka.trashmower;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import org.durka.trashmower.R;
 
 public class MapLoading extends Activity {
 	

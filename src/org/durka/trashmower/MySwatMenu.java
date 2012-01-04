@@ -16,11 +16,12 @@
  * along with Trashmower.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.durka.myswat;
+package org.durka.trashmower;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
+import org.durka.trashmower.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;

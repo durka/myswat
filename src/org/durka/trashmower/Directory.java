@@ -16,9 +16,10 @@
  * along with Trashmower.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.durka.myswat;
+package org.durka.trashmower;
 
 import com.unboundid.ldap.sdk.LDAPConnection;
+import org.durka.trashmower.R;
 
 import android.app.Activity;
 import android.content.Context;
