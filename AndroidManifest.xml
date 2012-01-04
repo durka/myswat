@@ -28,7 +28,7 @@
     <application android:icon="@drawable/icon"
                  android:label="@string/app_name"
                  android:debuggable="true">
-        <activity android:name="MySwatManager"
+        <activity android:name=".Manager"
             	  android:label="@string/app_name" android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

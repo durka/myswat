@@ -31,9 +31,9 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import org.durka.trashmower.R;
 
-public class MySwatManager extends Activity {
+public class Manager extends Activity {
 	private Class<?>[] intents = {
-			MySwatMenu.class,
+			MySwat.class,
 			MapLoading.class,
 			Directory.class,
 	};

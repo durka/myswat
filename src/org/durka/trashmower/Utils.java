@@ -128,7 +128,7 @@ public class Utils {
     public static String do_http(String uri, String method) { return do_http(uri, method, null); }
     public static String do_http(String uri, String method, String referer)
 	{
-    	Log.d("MySwat", method + " " + uri);
+    	Log.d("Utils", method + " " + uri);
 		try
 		{
 			HttpUriRequest request = null;

@@ -52,7 +52,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MySwatMenu extends Activity {
+public class MySwat extends Activity {
 	
 	public static final String ROOT = "https://myswat.swarthmore.edu";
 	public static final String MAIN = "/pls/twbkwbis.P_GenMenu?name=bmenu.P_MainMnu&msg=WELCOME+";
