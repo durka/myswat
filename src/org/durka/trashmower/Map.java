@@ -19,20 +19,17 @@
 package org.durka.trashmower;
 
 import java.util.ArrayList;
-import org.durka.trashmower.R;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -47,9 +44,11 @@ public class Map extends MapActivity {
 	private class SwatOverlay extends ItemizedOverlay<OverlayItem> {
 		
 		private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
+		private Context context;
 
-		public SwatOverlay(Drawable defaultMarker) {
+		public SwatOverlay(Context c, Drawable defaultMarker) {
 			super(boundCenterBottom(defaultMarker));
+			context = c;
 		}
 		
 		public void addOverlay(OverlayItem overlay) {
@@ -67,9 +66,16 @@ public class Map extends MapActivity {
 			return overlays.size();
 		}
 
+		@Override
+		protected boolean onTap(int i)
+		{
+			Toast.makeText(context, overlays.get(i).getSnippet(), Toast.LENGTH_SHORT).show();
+			return true;
+		}
 	}
 
 	private MyLocationOverlay waldo; // current location represented by Where's Waldo? cute huh
+	private SwatOverlay campusmap;
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -120,10 +126,31 @@ public class Map extends MapActivity {
         map.setSatellite(true);
         recenter();
         
+        // overlay current location
         waldo = new MyLocationOverlay(this, map);
         waldo.enableMyLocation();
         waldo.enableCompass();
         map.getOverlays().add(waldo);
+        
+        // overlay campus map markers
+        campusmap = new SwatOverlay(this, getResources().getDrawable(R.drawable.pin));
+        Resources res = getResources();
+        String[] shorts = res.getStringArray(R.array.shorts),
+        		 names = res.getStringArray(R.array.names),
+        		 latitudes = res.getStringArray(R.array.latitudes),
+        		 longitudes = res.getStringArray(R.array.longitudes),
+        		 descriptions = res.getStringArray(R.array.descriptions);
+        for (int i = 0; i < shorts.length; ++i)
+        {
+        	campusmap.addOverlay(
+        			new OverlayItem(
+        					new GeoPoint(
+        							(int)(Double.parseDouble(latitudes[i])*1e6),
+        							(int)(Double.parseDouble(longitudes[i])*1e6)),
+        					shorts[i],
+        					names[i]));
+        }
+        map.getOverlays().add(campusmap);
     }
 
 	private void recenter() {
