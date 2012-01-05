@@ -20,7 +20,9 @@ package org.durka.trashmower;
 
 import java.util.ArrayList;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
@@ -28,6 +30,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -41,9 +44,17 @@ import com.google.android.maps.OverlayItem;
 
 public class Map extends MapActivity {
 	
+	/*
+	 * An ItemizedOverlay for Swarthmore locations
+	 * 
+	 * The extra feature is a "hidden" overlay list that
+	 * can be swapped with the real one at any time. It's
+	 * like double buffering.
+	 */
 	private class SwatOverlay extends ItemizedOverlay<OverlayItem> {
 		
 		private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
+		private ArrayList<OverlayItem> hidden_overlays = new ArrayList<OverlayItem>();
 		private Context context;
 
 		public SwatOverlay(Context c, Drawable defaultMarker) {
@@ -65,6 +76,18 @@ public class Map extends MapActivity {
 		public int size() {
 			return overlays.size();
 		}
+		
+		public int hidden_size() {
+			return hidden_overlays.size();
+		}
+		
+		public void swap()
+		{
+			ArrayList<OverlayItem> temp = overlays;
+			overlays = hidden_overlays;
+			hidden_overlays = temp;
+			populate();
+		}
 
 		@Override
 		protected boolean onTap(int i)
@@ -75,7 +98,10 @@ public class Map extends MapActivity {
 	}
 
 	private MyLocationOverlay waldo; // current location represented by Where's Waldo? cute huh
-	private SwatOverlay campusmap;
+	private SwatOverlay campusmap, marauders;
+	private boolean gps_on = false;
+	private boolean locations_on = false;
+	private boolean swatties_on = false;
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -97,6 +123,31 @@ public class Map extends MapActivity {
 				return true;
 			case R.id.whereami:
 				find_waldo();
+				return true;
+			case R.id.layers:
+				final boolean[] on = new boolean[]{gps_on, locations_on, swatties_on};
+				AlertDialog.Builder builder = new AlertDialog.Builder(this)
+					.setTitle("Layers")
+					.setCancelable(true)
+					.setMultiChoiceItems(
+							new String[]{"GPS", "Locations", "Swatties"},
+							new boolean[]{gps_on, locations_on, swatties_on},
+							new DialogInterface.OnMultiChoiceClickListener() {
+								public void onClick(DialogInterface dialog,
+										int which, boolean isChecked)
+								{
+									on[which] = isChecked;
+								}
+							})
+					.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which)
+						{
+							gps(on[0]);
+							locations(on[1]);
+							swatties(on[2]);
+						}
+					});
+				builder.show();
 				return true;
 			case R.id.satellite:
 				map.setSatellite(!map.isSatellite());
@@ -128,29 +179,73 @@ public class Map extends MapActivity {
         
         // overlay current location
         waldo = new MyLocationOverlay(this, map);
-        waldo.enableMyLocation();
-        waldo.enableCompass();
         map.getOverlays().add(waldo);
         
         // overlay campus map markers
         campusmap = new SwatOverlay(this, getResources().getDrawable(R.drawable.pin));
-        Resources res = getResources();
-        String[] shorts = res.getStringArray(R.array.shorts),
-        		 names = res.getStringArray(R.array.names),
-        		 latitudes = res.getStringArray(R.array.latitudes),
-        		 longitudes = res.getStringArray(R.array.longitudes),
-        		 descriptions = res.getStringArray(R.array.descriptions);
-        for (int i = 0; i < shorts.length; ++i)
-        {
-        	campusmap.addOverlay(
-        			new OverlayItem(
-        					new GeoPoint(
-        							(int)(Double.parseDouble(latitudes[i])*1e6),
-        							(int)(Double.parseDouble(longitudes[i])*1e6)),
-        					shorts[i],
-        					names[i]));
-        }
         map.getOverlays().add(campusmap);
+    }
+    
+    private void gps(boolean on)
+    {
+    	if (on && !gps_on)
+    	{
+    		waldo.enableMyLocation();
+            waldo.enableCompass();
+            gps_on = true;
+    	}
+    	else if (!on && gps_on)
+    	{
+    		waldo.disableCompass();
+    		waldo.disableMyLocation();
+    		gps_on = false;
+    	}
+    }
+    
+    private void locations(boolean on)
+    {
+    	if (on && !locations_on)
+    	{
+    		if (campusmap.hidden_size() == 0)
+    		{
+    			Resources res = getResources();
+    	        String[] shorts = res.getStringArray(R.array.shorts),
+    	        		 names = res.getStringArray(R.array.names),
+    	        		 latitudes = res.getStringArray(R.array.latitudes),
+    	        		 longitudes = res.getStringArray(R.array.longitudes),
+    	        		 descriptions = res.getStringArray(R.array.descriptions);
+    	        for (int i = 0; i < shorts.length; ++i)
+    	        {
+    	        	campusmap.addOverlay(
+    	        			new OverlayItem(
+    	        					new GeoPoint(
+    	        							(int)(Double.parseDouble(latitudes[i])*1e6),
+    	        							(int)(Double.parseDouble(longitudes[i])*1e6)),
+    	        					shorts[i],
+    	        					names[i]));
+    	        }
+    		}
+    		else
+    		{
+    			campusmap.swap();
+    		}
+    		map.invalidate();
+    		locations_on = true;
+    	}
+    	else if (!on && locations_on)
+    	{
+    		campusmap.swap();
+    		map.invalidate();
+    		locations_on = false;
+    	}
+    }
+    
+    private void swatties(boolean on)
+    {
+    	if (on)
+    	{
+    		throw new RuntimeException("privacy");
+    	}
     }
 
 	private void recenter() {
@@ -160,30 +255,37 @@ public class Map extends MapActivity {
 	
 	private void find_waldo() {
 		Location fix = waldo.getLastFix();
-		long ago = System.currentTimeMillis() - fix.getTime();
-		String description = "This fix is from " + fix.getProvider() + ", ";
-		if (ago > 30*60*1000)
+		if (fix == null)
 		{
-			description = null;
-		}
-		else if (ago > 2*60*1000)
-		{
-			description += Long.toString(ago/1000/60) + " minutes ago";
+			Toast.makeText(this, "No fix or GPS not enabled", Toast.LENGTH_SHORT).show();
 		}
 		else
 		{
-			description += Long.toString(ago/1000) + " seconds ago";
-		}
-		
-		if (description != null)
-		{
-			map.getController().animateTo(waldo.getMyLocation());
+			long ago = System.currentTimeMillis() - fix.getTime();
+			String description = "This fix is from " + fix.getProvider() + ", ";
+			if (ago > 30*60*1000)
+			{
+				description = null;
+			}
+			else if (ago > 2*60*1000)
+			{
+				description += Long.toString(ago/1000/60) + " minutes ago";
+			}
+			else
+			{
+				description += Long.toString(ago/1000) + " seconds ago";
+			}
 			
-			Toast.makeText(this, description, Toast.LENGTH_SHORT).show();
-		}
-		else
-		{
-			Toast.makeText(this, "No location fix in the last half hour", Toast.LENGTH_SHORT).show();
+			if (description != null)
+			{
+				map.getController().animateTo(waldo.getMyLocation());
+				
+				Toast.makeText(this, description, Toast.LENGTH_SHORT).show();
+			}
+			else
+			{
+				Toast.makeText(this, "No location fix in the last half hour", Toast.LENGTH_SHORT).show();
+			}
 		}
 	}
 
@@ -197,10 +299,10 @@ public class Map extends MapActivity {
 	{
 		super.onResume();
 		
-		if (waldo != null)
+		if (waldo != null && gps_on)
 		{
-			waldo.enableMyLocation();
-			waldo.enableCompass();
+			gps_on = false;
+			gps(true);
 		}
 	}
 	
@@ -209,8 +311,7 @@ public class Map extends MapActivity {
 	{
 		Log.d("Map", "onPause");
 		
-		waldo.disableCompass();
-		waldo.disableMyLocation();
+		gps(false);
 		
 		super.onPause();
 	}
