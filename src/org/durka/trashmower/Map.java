@@ -66,6 +66,10 @@ public class Map extends MapActivity {
 			overlays.add(overlay);
 			populate();
 		}
+		
+		public void addHiddenOverlay(OverlayItem overlay) {
+			hidden_overlays.add(overlay);
+		}
 
 		@Override
 		protected OverlayItem createItem(int i) {
@@ -216,7 +220,7 @@ public class Map extends MapActivity {
     	        		 descriptions = res.getStringArray(R.array.descriptions);
     	        for (int i = 0; i < shorts.length; ++i)
     	        {
-    	        	campusmap.addOverlay(
+    	        	campusmap.addHiddenOverlay(
     	        			new OverlayItem(
     	        					new GeoPoint(
     	        							(int)(Double.parseDouble(latitudes[i])*1e6),
@@ -225,10 +229,9 @@ public class Map extends MapActivity {
     	        					names[i]));
     	        }
     		}
-    		else
-    		{
-    			campusmap.swap();
-    		}
+    		
+    		campusmap.swap();
+    		
     		map.invalidate();
     		locations_on = true;
     	}
