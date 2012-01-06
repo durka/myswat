@@ -55,12 +55,16 @@ public class Utils {
     //		prior: if prior is not "", the dialog is not created and the callback is called immediately as if the user had typed in prior
     //		password: if so, the letters in the dialog are obscured
     //		ok: Callee instance with the callback
-    public static void ask(Context c, String title, String prior, boolean password, final Callee ok)
+	public static void ask(Context c, String title, String prior, boolean password, final Callee ok)
+	{
+		ask(c, title, prior, password, ok, null);
+	}
+    public static void ask(Context c, String title, String prior, boolean password, final Callee ok, final Runnable cancel)
     {
     	// if prior is not empty, skip the dialog
     	// the point of this is to allow use of an anonymous class for the Callee when it is not known whether ask() will block
     	//		(no code that needs the answer can be placed after ask() returns, because ask() returns immediately but the callback happens later)
-    	if (prior != "")
+    	if (!prior.equals(""))
     	{
     		ok.call(prior);
     		return;
@@ -83,6 +87,16 @@ public class Utils {
     			ok.call(input.getText().toString());
     		}
     	});
+    	
+    	if (cancel != null)
+    	{
+    		builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+				public void onCancel(DialogInterface dialog)
+				{
+					cancel.run();
+				}
+    		});
+    	}
     	
     	final AlertDialog alert = builder.create(); // build it now so we can call dismiss() in onKey
     	

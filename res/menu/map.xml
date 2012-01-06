@@ -22,6 +22,7 @@
     <item android:id="@+id/map_main" android:alphabeticShortcut="R" android:title="Recenter" android:enabled="true" android:checkable="false" android:visible="true" android:checked="false"></item>
     <item android:id="@+id/whereami" android:title="Where Am I?" android:alphabeticShortcut="W"></item><item android:id="@+id/layers" android:alphabeticShortcut="L" android:enabled="true" android:checkable="false" android:visible="true" android:checked="false" android:title="Layers..."></item><item android:id="@+id/satellite" android:alphabeticShortcut="S" android:title="Streets" android:enabled="true" android:checkable="true" android:visible="true" android:checked="true"></item>
     <item android:id="@+id/googlemaps" android:alphabeticShortcut="G" android:title="Google Maps..." android:enabled="true" android:checkable="false" android:visible="true" android:checked="false"></item>
+    <item android:id="@+id/marauderclear" android:title="Clear Marauder Data"></item>
     
     
     

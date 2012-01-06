@@ -18,22 +18,32 @@
 
 package org.durka.trashmower;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
@@ -56,10 +66,14 @@ public class Map extends MapActivity {
 		private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
 		private ArrayList<OverlayItem> hidden_overlays = new ArrayList<OverlayItem>();
 		private Context context;
+		
+		public static final int BOTTOM = 0;
+		public static final int CENTER = 1;
 
-		public SwatOverlay(Context c, Drawable defaultMarker) {
-			super(boundCenterBottom(defaultMarker));
+		public SwatOverlay(Context c, Drawable defaultMarker, int bound) {
+			super(bound == BOTTOM ? boundCenterBottom(defaultMarker) : boundCenter(defaultMarker));
 			context = c;
+			populate();
 		}
 		
 		public void addOverlay(OverlayItem overlay) {
@@ -69,6 +83,15 @@ public class Map extends MapActivity {
 		
 		public void addHiddenOverlay(OverlayItem overlay) {
 			hidden_overlays.add(overlay);
+		}
+		
+		public void clearOverlays() {
+			overlays.clear();
+			populate();
+		}
+		
+		public void clearHiddenOverlays() {
+			hidden_overlays.clear();
 		}
 
 		@Override
@@ -87,8 +110,8 @@ public class Map extends MapActivity {
 		
 		public void swap()
 		{
-			ArrayList<OverlayItem> temp = overlays;
-			overlays = hidden_overlays;
+			ArrayList<OverlayItem> temp = new ArrayList<OverlayItem>(overlays);
+			overlays = new ArrayList<OverlayItem>(hidden_overlays);
 			hidden_overlays = temp;
 			populate();
 		}
@@ -102,10 +125,15 @@ public class Map extends MapActivity {
 	}
 
 	private MyLocationOverlay waldo; // current location represented by Where's Waldo? cute huh
-	private SwatOverlay campusmap, marauders;
+	private SwatOverlay campusmap, swatties;
+	private Handler handle = new Handler();
+	private Runnable swatties_runnable;
 	private boolean gps_on = false;
 	private boolean locations_on = false;
 	private boolean swatties_on = false;
+	private String marauder_id = "", marauder_name = "";
+	
+	private static final String MARAUDER_URL = "http://www.sccs.swarthmore.edu/users/12/aburka1/marauder/map.php";
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -161,6 +189,14 @@ public class Map extends MapActivity {
 				GeoPoint center = map.getMapCenter();
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + (center.getLatitudeE6()/1e6) + "," + (center.getLongitudeE6()/1e6) + "?z=17")));
 				return true;
+			case R.id.marauderclear:
+				getPreferences(Context.MODE_PRIVATE).edit()
+					.remove("marauder_id")
+					.remove("marauder_name")
+					.commit();
+				marauder_id = "";
+				marauder_name = "";
+				return true;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -182,12 +218,24 @@ public class Map extends MapActivity {
         recenter();
         
         // overlay current location
-        waldo = new MyLocationOverlay(this, map);
+        waldo = new MyLocationOverlay(this, map) {
+        	@Override
+        	public void onLocationChanged(Location location)
+        	{
+        		super.onLocationChanged(location);
+        		
+        		if (swatties_on) send_location(location);
+        	}
+        };
         map.getOverlays().add(waldo);
         
         // overlay campus map markers
-        campusmap = new SwatOverlay(this, getResources().getDrawable(R.drawable.pin));
+        campusmap = new SwatOverlay(this, getResources().getDrawable(R.drawable.pin), SwatOverlay.BOTTOM);
         map.getOverlays().add(campusmap);
+        
+        // overlay swatties
+        swatties = new SwatOverlay(this, getResources().getDrawable(R.drawable.footprint), SwatOverlay.CENTER);
+        map.getOverlays().add(swatties);
     }
     
     private void gps(boolean on)
@@ -245,9 +293,81 @@ public class Map extends MapActivity {
     
     private void swatties(boolean on)
     {
-    	if (on)
+    	if (on && !swatties_on)
     	{
-    		throw new RuntimeException("privacy");
+    		if (marauder_name.equals(""))
+    		{
+    			waldo.disableMyLocation();
+    			Utils.ask(this, "Enter your full name", "", false,
+    					new Utils.Callee() {
+		    				public void call(String str)
+		    				{
+		    					marauder_name = str;
+		    					waldo.enableMyLocation();
+		    					swatties(true);
+		    				}
+    					},
+    					new Runnable () {
+    						public void run()
+    						{
+    							Toast.makeText(Map.this, "Turn GPS off to show Swatties without sharing location", Toast.LENGTH_LONG).show();
+    							waldo.enableMyLocation();
+    						}
+    					});
+    			return;
+    		}
+    		
+    		if (swatties_runnable == null)
+    		{
+    			swatties_runnable = new Runnable() {
+					public void run()
+					{
+						try {
+							List<String[]> people = new CSVReader(new StringReader(Utils.do_http(MARAUDER_URL))).readAll();
+							swatties.swap();
+							swatties.clearHiddenOverlays();
+							for (String[] person : people)
+							{
+								swatties.addHiddenOverlay(
+										new OverlayItem(
+												new GeoPoint(
+														Integer.parseInt(person[2]),
+														Integer.parseInt(person[3])),
+												person[1],
+												person[1]));
+							}
+							swatties.swap();
+						} catch (IOException e) {
+							// it's a StringReader, it can't fail
+							// I hate checked exceptions
+							e.printStackTrace();
+						}
+						
+						if (waldo.getLastFix() != null)
+						{
+							send_location(waldo.getLastFix());
+						}
+						
+						handle.postDelayed(this, 5000);
+					}
+    			};
+    		}
+    		
+    		handle.postDelayed(swatties_runnable, 100);
+    		
+    		swatties.swap();
+    		map.invalidate();
+    		swatties_on = true;
+    	}
+    	else if (!on && swatties_on)
+    	{
+    		if (swatties_runnable != null)
+    		{
+    			handle.removeCallbacks(swatties_runnable);
+    		}
+    		swatties.swap();
+    		map.invalidate();
+    		swatties_on = false;
     	}
     }
 
@@ -260,7 +380,7 @@ public class Map extends MapActivity {
 		Location fix = waldo.getLastFix();
 		if (fix == null)
 		{
-			Toast.makeText(this, "No fix or GPS not enabled", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Can't show location: no fix or GPS not enabled", Toast.LENGTH_SHORT).show();
 		}
 		else
 		{
@@ -291,6 +411,41 @@ public class Map extends MapActivity {
 			}
 		}
 	}
+	
+	private void send_location(final Location fix)
+	{
+		if (fix == null)
+		{
+			Toast.makeText(this, "Can't share location: no fix or GPS not enabled", Toast.LENGTH_SHORT).show();
+		}
+		else
+		{
+			StringWriter writer = new StringWriter();
+			new CSVWriter(writer, CSVWriter.DEFAULT_SEPARATOR, CSVWriter.NO_QUOTE_CHARACTER)
+				.writeNext(new String[]{
+					marauder_name,
+					Integer.toString((int)(fix.getLatitude()*1e6)),
+					Integer.toString((int)(fix.getLongitude()*1e6)),
+					Long.toString(System.currentTimeMillis()/1000)
+			});
+			String encoded_location = null;
+			try {
+				encoded_location = URLEncoder.encode(writer.toString().trim(), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			
+			if (!marauder_id.equals(""))
+			{
+				Utils.do_http(MARAUDER_URL + "?i=" + marauder_id + "&l=" + encoded_location);
+			}
+			else
+			{
+				marauder_id = Utils.do_http(MARAUDER_URL + "?l=" + encoded_location).trim();
+				Log.d("Map", "got marauder id: " + marauder_id);
+			}
+		}
+	}
 
 	@Override
 	protected boolean isRouteDisplayed() {
@@ -302,10 +457,20 @@ public class Map extends MapActivity {
 	{
 		super.onResume();
 		
+		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+		marauder_id = prefs.getString("marauder_id", "");
+		marauder_name = prefs.getString("marauder_name", "");
+		Log.d("Map", "Loading marauder credentials " + marauder_id + "=" + marauder_name);
+		
 		if (waldo != null && gps_on)
 		{
 			gps_on = false;
 			gps(true);
+		}
+		if (swatties_on)
+		{
+			swatties_on = false;
+			swatties(true);
 		}
 	}
 	
@@ -314,7 +479,22 @@ public class Map extends MapActivity {
 	{
 		Log.d("Map", "onPause");
 		
-		gps(false);
+		if (gps_on)
+		{
+			gps(false);
+			gps_on = true;
+		}
+		if (swatties_on)
+		{
+			swatties(false);
+			swatties_on = true;
+		}
+		
+		Log.d("Map", "Saving marauder credentials " + marauder_id + "=" + marauder_name);
+		SharedPreferences.Editor edit = getPreferences(Context.MODE_PRIVATE).edit();
+		if (!marauder_id.equals("")) edit.putString("marauder_id", marauder_id);
+		if (!marauder_name.equals("")) edit.putString("marauder_name", marauder_name);
+		edit.commit();
 		
 		super.onPause();
 	}
