@@ -453,6 +453,11 @@ public class Map extends MapActivity {
 	}
 	
 	@Override
+	protected boolean isLocationDisplayed() {
+		return gps_on;
+	}
+	
+	@Override
 	protected void onResume()
 	{
 		super.onResume();
