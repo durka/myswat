@@ -28,6 +28,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Bundle;
@@ -87,6 +88,11 @@ public class MySwat extends Activity {
 	private boolean login_page;
 	private AlertDialog loading;
 	
+	private String js_genmenu,
+				   js_selectterm,
+				   js_detailschedule,
+				   js_unofficial;
+	
 	private final static int LOGIN_ATTEMPT_LIMIT = 2;
 	
     /** Called when the activity is first created. */
@@ -120,6 +126,13 @@ public class MySwat extends Activity {
 		WebView web = (WebView)findViewById(R.id.web);
 		web.getSettings().setBuiltInZoomControls(true);
 		web.getSettings().setJavaScriptEnabled(true);
+		
+		// javascript strings
+		AssetManager am = getResources().getAssets();
+		js_genmenu			= Utils.javascript(am, "genmenu");
+		js_selectterm		= Utils.javascript(am, "selectterm");
+		js_detailschedule	= Utils.javascript(am, "detailschedule");
+		js_unofficial		= Utils.javascript(am, "unofficial");
 		
 		// a cute little Loading dialog to throw up while the WebView is thinking
 		final TextView percent = new TextView(this);
@@ -247,27 +260,7 @@ public class MySwat extends Activity {
 						//		the XOM libraries. This was slow, especially the first time. Now, it takes
 						//		advantage of the fact that WebKit already did the parsing and we can pull
 						//		the table entries right out of the DOM.
-						view.loadUrl("javascript:(function(rows){" +
-								"for (var i = 0; i < rows.length; ++i)" + // these are rows of the table holding the menu entries
-								"{" +
-									"if (rows[i].nodeName == 'TR')" + // is this a row?
-									"{" +
-										"var tds = rows[i].childNodes;" +
-										"for (var j = 0; j < tds.length; ++j)" + // go through the row cells
-										"{" +
-											"if (tds[j].childNodes.length > 1)" + // is this a non-blank cell?
-											"{" + // okay, grab the link info!
-												  // we use console.log with a special prefix so that our custom WebChromeClient will catch it
-												"console.log('HERPDERP' + " +
-													"tds[j].childNodes[1].innerText + " +
-															"'DERPHERP' + " +
-													"'window.location=\"' + tds[j].childNodes[1].href + '\"'" +
-												");" +
-											"}" +
-										"}" +
-									"}" +
-								"}" +
-								"})(document.getElementsByClassName('menuplaintable')[0].childNodes[1].childNodes)"); // feed in the table rows, which are in a <tbody> in the <table class="menuplaintable">
+						view.loadUrl(js_genmenu);
 						handled = true;
 					}
 					else if (view.getTitle() != null && view.getTitle().equals("Select Term"))
@@ -275,18 +268,7 @@ public class MySwat extends Activity {
 						// it is the Select Term dropdown page
 						// let's get the options out
 						// (by injecting JavaScript of course)
-						view.loadUrl("javascript:(function(form_num, select_id){" +
-								"var form = document.forms[form_num], select = document.getElementById(select_id);" +
-								"for (var i = 0; i < select.options.length; ++i)" + // these are options of the dropdown holding the menu entries
-								"{" +
-									"console.log('HERPDERP' + " +
-										"select.options[i].text + " +
-												"'DERPHERP' + " +
-										"'document.getElementById(\"' + select_id + '\").selectedIndex='+i+';" +
-										" document.forms[' + form_num + '].submit()'" + // submit the form on ListView click
-									");" +
-								"}" +
-								"})(1, 'term_id')"); // feed in the form and the options, which are in a <select id="term_id">
+						view.loadUrl(js_selectterm); // feed in the form and the options, which are in a <select id="term_id">
 						
 						handled = true;
 					}
@@ -294,62 +276,7 @@ public class MySwat extends Activity {
 					{
 						// it is the detailed schedule table
 						// let's parse the classes out
-						view.loadUrl("javascript:(function(tables){" +
-								"var classes = [];" +
-								"for (var i = 0; i < tables.length; ++i)" + // there is a pair of tables for each class
-								"{" +
-									"var klass = tables[i].caption.innerText.split(/ ?- ?/);" +
-									"var name = klass[0];" +
-									"if (i+1 <= tables.length && tables[i+1].summary.substr(0, 10) == 'This table')" +
-									"{" +
-										"if (tables[i+1].rows[1].cells[5].innerText == 'Lab')" +
-										"{" +
-											"classes[classes.length-1].time += ', lab ' + tables[i+1].rows[1].cells[2].innerText + ' ' + tables[i+1].rows[1].cells[1].innerText.split(\" - \")[0];" +
-											"classes[classes.length-1].place += ', lab ' + tables[i+1].rows[1].cells[3].innerText;" +
-										"}" +
-										"else if (tables[i+1].rows[1].cells[5].innerText == 'Problem session')" +
-										"{" +
-											"classes[classes.length-1].time += ', prob sess ' + tables[i+1].rows[1].cells[2].innerText + ' ' + tables[i+1].rows[1].cells[1].innerText.split(\" - \")[0];" +
-											"classes[classes.length-1].place += ', prob sess ' + tables[i+1].rows[1].cells[3].innerText;" +
-										"}" +
-										"else" +
-										"{" +
-											"classes[classes.length] = {" +
-												"'name': name," +
-												"'section': klass[1] + ' (' + klass[2] + ')'," +
-												"'prof': tables[i+1].rows[1].cells[6].innerText," +
-												"'time': tables[i+1].rows[1].cells[2].innerText + ' ' + tables[i+1].rows[1].cells[1].innerText.split(\" - \")[0]," +
-												"'place': tables[i+1].rows[1].cells[3].innerText," +
-												"'credit': Math.round(tables[i].rows[5].cells[1].innerText*10)/10 + ' credit(s), ' + tables[i].rows[4].cells[1].innerText," +
-											"};" +
-										"}" +
-										"++i;" +
-									"}" +
-									"else" +
-									"{" +
-										"classes[classes.length] = {" +
-											"'name': name," +
-											"'section': klass[1] + ' (' + klass[2] + ')'," +
-											"'prof': ''," +
-											"'time': ''," +
-											"'place': ''," +
-											"'credit': Math.round(tables[i].rows[5].cells[1].innerText*10)/10 + ' credit(s), ' + tables[i].rows[4].cells[1].innerText" +
-										"};" +
-									"}" +
-								"}" +
-								"for (var i = 0; i < classes.length; ++i)" +
-								"{" +
-									"console.log('HERPDERP' + " +
-										"classes[i].name + " +
-												"'DERPHERP' + " +
-										"'alert(\"' + [classes[i].section, classes[i].prof," +
-													 " classes[i].time," +
-													 " classes[i].place.replace(/Science Center/g, 'Sci')," +
-													 " classes[i].credit].join('\\\\n')" +
-											"+ '\")'" +
-									");" +
-								"}" +
-								"})(document.getElementsByClassName('datadisplaytable'))");
+						view.loadUrl(js_detailschedule);
 						
 						handled = true;
 					}
@@ -357,48 +284,7 @@ public class MySwat extends Activity {
 					{
 						// Grades at a Glance!
 						
-						view.loadUrl("javascript:(function(rows){" +
-								"var semesters = [];" +
-								"var cursem = null;" +
-								"for (var i = 0; i < rows.length; ++i)" + // a row may be a semester colspan, a header row or a data row
-								"{" +
-									"if (rows[i].cells.length == 1)" +
-									"{" + // it's a semester colspan
-										"if (cursem != null) semesters[semesters.length] = cursem;" +
-										"var text = rows[i].cells[0].innerText.split(/\\s+/);" +
-										"cursem = {" +
-											"'term': text[1] + ' ' + text[2]," +
-											"'credits': parseInt(text[text.length-1])," +
-											"'grades': []," +
-										"};" +
-									"}" +
-									"else if (rows[i].onmouseover != null)" +
-									"{" + // data rows have mouseover events
-										"function T(j) { return rows[i].cells[j].innerText; }" +
-										"cursem.grades[cursem.grades.length] = {" +
-											"'name': T(1)," +
-											"'detail': T(0)," +
-											"'prof': T(5)," +
-											"'credits': T(2)," +
-											"'grade': T(3)," +
-										"};" +
-									"}" +
-								"}" +
-								"if (cursem != null) semesters[semesters.length] = cursem;" +
-								"for (var i = 0; i < semesters.length; ++i)" +
-								"{" +
-									"var s = [];" +
-									"for (var j = 0; j < semesters[i].grades.length; ++j)" +
-									"{" +
-										"s[s.length] = [semesters[i].grades[j].grade + ' in ' + semesters[i].grades[j].name, semesters[i].grades[j].detail, semesters[i].grades[j].prof, semesters[i].grades[j].credits + ' credit(s)'].filter(function (a) { return a != '-'; }).join('\\\\n\\\\t\\\\t');" +
-									"}" +
-									"console.log('HERPDERP' + " +
-										"semesters[i].term + ' (' + semesters[i].credits + ' credits)' + " +
-												"'DERPHERP' + " +
-										"'alert(\"' + s.join('\\\\n') + '\")'" +
-									");" +
-								"}" +
-								"})(document.getElementsByClassName('default2')[0].rows)");
+						view.loadUrl(js_unofficial);
 						
 						handled = true;
 					}

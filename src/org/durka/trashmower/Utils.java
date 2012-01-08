@@ -30,6 +30,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.AssetManager;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -181,4 +182,32 @@ public class Utils {
 			return "E: " + e.getMessage();
 		}
 	}
+    
+    /*
+     * get javascript out of an asset file
+     * 		condense it into a single line
+     * 			note 1: the contents of the file should be a single function!
+     * 			note 2: only C-style comments allowed!
+     * 		format as javascript: URL for injection
+     */
+    public static String javascript(AssetManager am, String asset)
+    {
+    	StringBuilder js = new StringBuilder("javascript:(");
+    	
+    	try {
+			BufferedReader raw = new BufferedReader(
+									new InputStreamReader(
+											am.open("js/" + asset + ".js")));
+			String line = raw.readLine();
+			while (line != null)
+			{
+				js.append(line.trim());
+				line = raw.readLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+    	return js.append(")()").toString();
+    }
 }
