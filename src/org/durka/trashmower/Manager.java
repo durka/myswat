@@ -36,6 +36,7 @@ public class Manager extends Activity {
 			MySwat.class,
 			MapLoading.class,
 			Directory.class,
+			Preferences.class,
 	};
 	
     public class ImageAdapter extends BaseAdapter {
@@ -44,6 +45,7 @@ public class Manager extends Activity {
     			R.drawable.menu,
     			R.drawable.map,
     			R.drawable.addressbook,
+    			R.drawable.settings,
     	};
 
 		public ImageAdapter(Context c) {

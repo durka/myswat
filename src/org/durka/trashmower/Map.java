@@ -162,6 +162,7 @@ public class Map extends MapActivity {
 					.setTitle("Layers")
 					.setCancelable(true)
 					.setMultiChoiceItems(
+							// TODO change Locations to Places (and in the prefs), switch up the order
 							new String[]{"GPS", "Locations", "Swatties"},
 							new boolean[]{gps_on, locations_on, swatties_on},
 							new DialogInterface.OnMultiChoiceClickListener() {

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <PreferenceCategory
+        android:title="MySwarthmore">
+        
+        <CheckBoxPreference
+            android:title="Autologin"
+            android:key="myswat_autologin"/>
+        <EditTextPreference
+            android:title="Username"
+            android:key="myswat_username"
+            android:dependency="myswat_autologin"/>
+        <EditTextPreference
+            android:dependency="myswat_autologin"
+            android:title="Password"
+            android:inputType="textPassword"
+            android:key="myswat_password"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Marauder's Map">
+        <CheckBoxPreference android:title="Show your location by default" android:key="map_gps"/>
+        <CheckBoxPreference android:title="Show Swat locations by default" android:key="map_locations"/>
+        <CheckBoxPreference android:title="Show other Swatties by default" android:key="map_swatties"/>
+        <CheckBoxPreference android:title="Share my location if GPS is on" android:key="map_swatties_myself"/>
+        <EditTextPreference android:title="Your name" android:key="map_swatties_name" android:summary="appears on others' maps" android:dependency="map_swatties_myself"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Directory">
+        <CheckBoxPreference android:title="Use Cygnet (when on campus)" android:key="directory_cygnet"/>
+        <CheckBoxPreference android:title="Use ITS directory" android:key="directory_its"/>
+    </PreferenceCategory>
+    
+
+</PreferenceScreen>
