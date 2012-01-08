@@ -21,14 +21,19 @@
       	  android:versionCode="1"
           android:versionName="1.0"
           package="org.durka.trashmower">
+    
+    <uses-sdk android:minSdkVersion="7" />
+    
     <uses-permission android:name="android.permission.INTERNET" />
-    <supports-screens android:largeScreens="false" android:normalScreens="true" android:smallScreens="false" android:resizeable="true" android:anyDensity="true"/>
-    <uses-feature android:required="false" android:name="android.hardware.location"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-feature android:required="false" android:name="android.hardware.location"/>
+    
+    <supports-screens android:largeScreens="false" android:normalScreens="true" android:smallScreens="false" android:resizeable="true" android:anyDensity="true"/>
+    
     <application android:icon="@drawable/icon"
                  android:label="@string/app_name"
                  android:debuggable="true">
-        <activity android:name=".Manager"
+        <activity android:name="Manager"
             	  android:label="@string/app_name" android:configChanges="orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,27 +41,26 @@
             </intent-filter>
         </activity>
         
-        <activity android:name="MySwatMenu"
-                  android:label="@string/app_name" android:configChanges="orientation">
+        <activity android:name="MySwat"
+                  android:label="@string/myswat_activity" android:configChanges="orientation">
         </activity>
         
         <activity android:name="Directory"
-            	  android:label="@string/app_name"
+            	  android:label="@string/directory_activity"
             	  android:configChanges="orientation" />
         
         <activity android:name="Map"
-            	  android:label="@string/app_name"
+            	  android:label="@string/map_activity"
             	  android:permission="android.permission.INTERNET"
             	  android:configChanges="orientation" />
         
-        <activity android:label="@string/app_name"
+        <activity android:label="@string/map_activity"
                   android:name="MapLoading"
                   android:noHistory="true" />
         
-        <uses-library android:required="true" android:name="com.google.android.maps"/>
-        <activity android:name="Preferences" android:label="@string/app_name"></activity>
+        
+        <activity android:name="Preferences" android:label="@string/prefs_activity"></activity><uses-library android:required="true" android:name="com.google.android.maps" />
 
     </application>
-    <uses-sdk android:minSdkVersion="7" />
 
 </manifest> 

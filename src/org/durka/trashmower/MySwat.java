@@ -472,7 +472,7 @@ public class MySwat extends Activity {
 			@Override
 			public void onReceivedTitle(WebView view, String title)
 			{
-				activity.setTitle("MySwat (" + title + ")");
+				activity.setTitle(getResources().getString(R.string.myswat_activity) + " (" + title + ")");
 			}
 			
 			@Override
