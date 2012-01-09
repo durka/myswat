@@ -29,6 +29,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
+
 import org.durka.trashmower.R;
 
 public class Manager extends Activity {
@@ -46,6 +48,12 @@ public class Manager extends Activity {
     			R.drawable.map,
     			R.drawable.addressbook,
     			R.drawable.settings,
+    	};
+    	private String[] labels = {
+    			"MySwat",
+    			"Map",
+    			"Directory",
+    			"Settings",
     	};
 
 		public ImageAdapter(Context c) {
@@ -65,19 +73,18 @@ public class Manager extends Activity {
 		}
 
 		// create a new ImageView for each item referenced by the Adapter
-	    public View getView(int position, View convert_view, ViewGroup parent) {
-	        ImageView image;
+	    public View getView(int position, View convert_view, ViewGroup parent)
+	    {
 	        if (convert_view == null) {  // if it's not recycled, initialize some attributes
-	            image = new ImageView(context);
-	            image.setLayoutParams(new GridView.LayoutParams(115, 115));
-	            image.setScaleType(ImageView.ScaleType.FIT_CENTER);
-	            image.setPadding(8, 8, 8, 8);
-	        } else {
-	            image = (ImageView) convert_view;
+	        	convert_view = getLayoutInflater().inflate(R.layout.manager_item, null);
+	        	TextView txt = (TextView) convert_view.findViewById(R.id.manager_item_label);
+	        	ImageView img = (ImageView) convert_view.findViewById(R.id.manager_item_image);
+	        	
+	            txt.setText(labels[position]);
+	            img.setImageResource(thumbs[position]);
 	        }
 
-	        image.setImageResource(thumbs[position]);
-	        return image;
+	        return convert_view;
 	    }
 
 	}
