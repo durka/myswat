@@ -32,6 +32,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
@@ -207,48 +208,56 @@ public class MySwat extends Activity {
 						}
 						else
 						{
-							final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
+							final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
 							final SharedPreferences.Editor e = prefs.edit();
 							
-							// the ask() function puts up an AlertDialog with an EditView
-							// TODO: activity for user management
-							Utils.ask(activity, "Username:", prefs.getString("username", ""), false, new Utils.Callee() {
-								public void call(String str) {
-									final String username = str;
-									e.putString("username", username);
-									
-									Utils.ask(activity, "Password:", prefs.getString("password", ""), true, new Utils.Callee() {
-										public void call(String str) {
-											final String password = str;
-											if (!password.equals(prefs.getString("password", "")))
-											{
-												e.putString("password", password);
-												Utils.yesno(activity, "Remember password?",
-														new Runnable() {
-															public void run()
-															{
-																e.commit();
-															}
-														},
-														new Runnable() {
-															public void run()
-															{
-																// not saving the password
-															}
-														});
+							if (prefs.getBoolean("myswat_autologin", true))
+							{
+								// the ask() function puts up an AlertDialog with an EditView
+								// TODO: activity for user management
+								Utils.ask(activity, "Username:", prefs.getString("myswat_username", ""), false, new Utils.Callee() {
+									public void call(String str) {
+										final String username = str;
+										e.putString("myswat_username", username);
+										
+										Utils.ask(activity, "Password:", prefs.getString("myswat_password", ""), true, new Utils.Callee() {
+											public void call(String str) {
+												final String password = str;
+												if (!password.equals(prefs.getString("myswat_password", "")))
+												{
+													e.putString("myswat_password", password);
+													Utils.yesno(activity, "Remember password?",
+															new Runnable() {
+																public void run()
+																{
+																	e.commit();
+																}
+															},
+															new Runnable() {
+																public void run()
+																{
+																	// not saving the password
+																}
+															});
+												}
+												
+												// inject some JavaScript to fill out and submit the login form
+												((WebView)findViewById(R.id.web)).loadUrl("javascript:" +
+														"document.getElementsByName('sid')[0].value = '" + username + "';" +
+														"document.getElementsByName('PIN')[0].value = '" + password + "';" +
+														"document.loginform.submit();");
 											}
-											
-											// inject some JavaScript to fill out and submit the login form
-											((WebView)findViewById(R.id.web)).loadUrl("javascript:" +
-													"document.getElementsByName('sid')[0].value = '" + username + "';" +
-													"document.getElementsByName('PIN')[0].value = '" + password + "';" +
-													"document.loginform.submit();");
-										}
-									});
-								}
-							});
-							
-							handled = true;
+										});
+									}
+								});
+								
+								handled = true;
+							}
+							else
+							{
+								// the user has disabled autologin in the preferences screen
+								handled = false;
+							}
 						}
 					}
 					else if (currentURI.getPath().contains("P_GenMenu") || (view.getTitle() != null && view.getTitle().equals("Registration")))

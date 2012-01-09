@@ -37,6 +37,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -130,6 +131,7 @@ public class Map extends MapActivity {
 	private boolean gps_on = false;
 	private boolean locations_on = false;
 	private boolean swatties_on = false;
+	private boolean swatties_self = true;
 	private String marauder_id = "", marauder_name = "";
 	
 	private static final String MARAUDER_URL = "http://www.sccs.swarthmore.edu/users/12/aburka1/marauder/map.php";
@@ -210,6 +212,12 @@ public class Map extends MapActivity {
     	Log.d("Map", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map);
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        gps_on			= prefs.getBoolean("map_gps", false);
+        locations_on	= prefs.getBoolean("map_locations", false);
+        swatties_on		= prefs.getBoolean("map_swatties", false);
+        swatties_self	= prefs.getBoolean("swatties_self", true);
         
         map = (MapView) findViewById(R.id.map);
         map.setBuiltInZoomControls(true);
@@ -295,7 +303,7 @@ public class Map extends MapActivity {
     {
     	if (on && !swatties_on)
     	{
-    		if (marauder_name.equals(""))
+    		if (swatties_self && marauder_name.equals(""))
     		{
     			waldo.disableMyLocation();
     			Utils.ask(this, "Enter your full name", "", false,
@@ -343,7 +351,7 @@ public class Map extends MapActivity {
 							e.printStackTrace();
 						}
 						
-						if (waldo.getLastFix() != null)
+						if (swatties_self && waldo.getLastFix() != null)
 						{
 							send_location(waldo.getLastFix());
 						}
@@ -462,7 +470,7 @@ public class Map extends MapActivity {
 	{
 		super.onResume();
 		
-		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		marauder_id = prefs.getString("marauder_id", "");
 		marauder_name = prefs.getString("marauder_name", "");
 		Log.d("Map", "Loading marauder credentials " + marauder_id + "=" + marauder_name);

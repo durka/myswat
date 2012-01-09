@@ -5,7 +5,7 @@
         
         <CheckBoxPreference
             android:title="Autologin"
-            android:key="myswat_autologin"/>
+            android:key="myswat_autologin" android:defaultValue="true"/>
         <EditTextPreference
             android:title="Username"
             android:key="myswat_username"
@@ -21,7 +21,7 @@
         <CheckBoxPreference android:title="Show Swat locations by default" android:key="map_locations"/>
         <CheckBoxPreference android:title="Show other Swatties by default" android:key="map_swatties"/>
         <CheckBoxPreference android:title="Share my location if GPS is on" android:key="map_swatties_myself"/>
-        <EditTextPreference android:title="Your name" android:key="map_swatties_name" android:summary="appears on others' maps" android:dependency="map_swatties_myself"/>
+        <EditTextPreference android:title="Your name" android:key="marauder_name" android:summary="appears on others' maps" android:dependency="map_swatties_myself"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="Directory">
         <CheckBoxPreference android:title="Use Cygnet (when on campus)" android:key="directory_cygnet"/>

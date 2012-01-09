@@ -18,8 +18,13 @@
 
 package org.durka.trashmower;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuItem;
 
 
 public class Preferences extends PreferenceActivity {
@@ -30,6 +35,51 @@ public class Preferences extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		
 		addPreferencesFromResource(R.xml.prefs);
+		PreferenceManager.setDefaultValues(this, R.xml.prefs, false);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		getMenuInflater().inflate(R.menu.preferences, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId())
+		{
+			case R.id.escape:
+				this.finish();
+				return true;
+			case R.id.defaults:
+				final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+				final PreferenceActivity activity = this;
+				Utils.yesno(this, "Are you sure?",
+						new Runnable() {
+							public void run()
+							{
+								// clear preferences
+								prefs.edit()
+									.clear()
+									.commit();
+								
+								// restart the activity (no way to make it refresh)
+								activity.finish();
+								activity.startActivity(activity.getIntent());
+							}
+						},
+						new Runnable() {
+							public void run()
+							{
+								// do nothing
+							}
+						});
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 }
