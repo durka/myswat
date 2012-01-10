@@ -18,9 +18,9 @@
     </PreferenceCategory>
     <PreferenceCategory android:title="Marauder's Map">
         <CheckBoxPreference android:title="Show your location by default" android:key="map_gps"/>
-        <CheckBoxPreference android:title="Show Swat locations by default" android:key="map_locations"/>
+        
         <CheckBoxPreference android:title="Show other Swatties by default" android:key="map_swatties"/>
-        <CheckBoxPreference android:title="Share my location if GPS is on" android:key="map_swatties_myself"/>
+        <CheckBoxPreference android:title="Share my location if GPS is on" android:key="map_swatties_myself"/><CheckBoxPreference android:title="Show Swat places by default" android:key="map_locations" />
         <EditTextPreference android:title="Your name" android:key="marauder_name" android:summary="appears on others' maps" android:dependency="map_swatties_myself"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="Directory">

@@ -158,14 +158,13 @@ public class Map extends MapActivity {
 				find_waldo();
 				return true;
 			case R.id.layers:
-				final boolean[] on = new boolean[]{gps_on, locations_on, swatties_on};
+				final boolean[] on = new boolean[]{gps_on, swatties_on, locations_on};
 				AlertDialog.Builder builder = new AlertDialog.Builder(this)
 					.setTitle("Layers")
 					.setCancelable(true)
 					.setMultiChoiceItems(
-							// TODO change Locations to Places (and in the prefs), switch up the order
-							new String[]{"GPS", "Locations", "Swatties"},
-							new boolean[]{gps_on, locations_on, swatties_on},
+							new String[]{"GPS", "Swatties", "Places"},
+							new boolean[]{gps_on, swatties_on, locations_on},
 							new DialogInterface.OnMultiChoiceClickListener() {
 								public void onClick(DialogInterface dialog,
 										int which, boolean isChecked)
@@ -177,8 +176,8 @@ public class Map extends MapActivity {
 						public void onClick(DialogInterface dialog, int which)
 						{
 							gps(on[0]);
-							locations(on[1]);
-							swatties(on[2]);
+							swatties(on[1]);
+							locations(on[2]);
 						}
 					});
 				builder.show();
@@ -192,7 +191,7 @@ public class Map extends MapActivity {
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + (center.getLatitudeE6()/1e6) + "," + (center.getLongitudeE6()/1e6) + "?z=17")));
 				return true;
 			case R.id.marauderclear:
-				getPreferences(Context.MODE_PRIVATE).edit()
+				PreferenceManager.getDefaultSharedPreferences(this).edit()
 					.remove("marauder_id")
 					.remove("marauder_name")
 					.commit();
@@ -504,7 +503,7 @@ public class Map extends MapActivity {
 		}
 		
 		Log.d("Map", "Saving marauder credentials " + marauder_id + "=" + marauder_name);
-		SharedPreferences.Editor edit = getPreferences(Context.MODE_PRIVATE).edit();
+		SharedPreferences.Editor edit = PreferenceManager.getDefaultSharedPreferences(this).edit();
 		if (!marauder_id.equals("")) edit.putString("marauder_id", marauder_id);
 		if (!marauder_name.equals("")) edit.putString("marauder_name", marauder_name);
 		edit.commit();
