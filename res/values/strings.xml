@@ -24,6 +24,7 @@
     <string name="myswat_activity">Trashmower: MySwat</string>
     <string name="directory_activity">Trashmower: Directory</string>
     <string name="map_activity">Trashmower: Map</string>
+    <string name="food_activity">Trashmower: Food</string>
     <string name="prefs_activity">Trashmower: Preferences</string>
     <!-- /activity labels -->
 </resources>

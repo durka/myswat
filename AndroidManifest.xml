@@ -59,7 +59,8 @@
                   android:noHistory="true" />
         
         
-        <activity android:name="Preferences" android:label="@string/prefs_activity"></activity><uses-library android:required="true" android:name="com.google.android.maps" />
+        <activity android:name="Preferences" android:label="@string/prefs_activity"></activity><activity android:name="Food" android:label="@string/food_activity" android:permission="android.permission.INTERNET"></activity><uses-library android:required="true" android:name="com.google.android.maps" />
+        
 
     </application>
 

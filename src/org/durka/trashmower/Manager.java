@@ -38,6 +38,7 @@ public class Manager extends Activity {
 			MySwat.class,
 			MapLoading.class,
 			Directory.class,
+			Food.class,
 			Preferences.class,
 	};
 	
@@ -47,12 +48,14 @@ public class Manager extends Activity {
     			R.drawable.menu,
     			R.drawable.map,
     			R.drawable.addressbook,
+    			R.drawable.food,
     			R.drawable.settings,
     	};
     	private String[] labels = {
     			"MySwat",
     			"Map",
     			"Directory",
+    			"Food",
     			"Settings",
     	};
 

@@ -5,13 +5,13 @@
     android:orientation="vertical" >
 
     <ImageView android:id="@+id/manager_item_image"
-        	   android:layout_width="90dp"
-        	   android:layout_height="90dp"
+        	   android:layout_width="70dp"
+        	   android:layout_height="70dp"
         	   android:gravity="center_horizontal" />
     
     <TextView android:id="@+id/manager_item_label"
-        	  android:layout_width="90dp"
-        	  android:layout_height="90dp"
+        	  android:layout_width="70dp"
+        	  android:layout_height="70dp"
         	  android:gravity="center_horizontal" />
 
 </LinearLayout>
